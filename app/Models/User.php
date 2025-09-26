@@ -10,8 +10,8 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    protected $table = 'users';           // nom de la table
-    protected $primaryKey = 'id_user';    // clé primaire personnalisée
+    protected $table = 'users';
+    protected $primaryKey = 'id_user';
 
     protected $fillable = [
         'name',
@@ -27,4 +27,12 @@ class User extends Authenticatable
     protected $casts = [
         'password' => 'hashed',
     ];
+
+    // Relation avec les projets via la table member_project
+    public function projects()
+    {
+        return $this->belongsToMany(Project::class, 'member_project', 'user_id', 'project_id')
+                    ->withPivot('role')
+                    ->withTimestamps();
+    }
 }

@@ -19,6 +19,9 @@ Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 // Déconnexion
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware('auth')->name('dashboard');
+//bord
+use App\Http\Controllers\DashboardController;
+
+Route::get('/dashboard', [DashboardController::class, 'index'])
+     ->middleware('auth')
+     ->name('dashboard');
