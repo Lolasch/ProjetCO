@@ -12,21 +12,22 @@ return new class extends Migration
             $table->unsignedBigInteger('project_id');
             $table->unsignedBigInteger('user_id');
             $table->string('role'); // manager, employee, client
+
             $table->timestamps();
 
+            // Clé primaire composite
             $table->primary(['project_id', 'user_id']);
 
-            // FK vers projects
+            // Clés étrangères cohérentes
             $table->foreign('project_id')
-                  ->references('id') // ta table projects doit avoir 'id' comme clé primaire
-                  ->on('projects')
-                  ->onDelete('cascade');
+                  ->references('id_project')->on('projects')
+                  ->onDelete('cascade')
+                  ->onUpdate('cascade');
 
-            // FK vers users
             $table->foreign('user_id')
-                  ->references('id_user') // <-- ici on pointe sur id_user
-                  ->on('users')
-                  ->onDelete('cascade');
+                  ->references('id_user')->on('users')
+                  ->onDelete('cascade')
+                  ->onUpdate('cascade');
         });
     }
 

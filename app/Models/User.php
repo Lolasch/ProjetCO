@@ -11,7 +11,9 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     protected $table = 'users';
-    protected $primaryKey = 'id_user';
+    protected $primaryKey = 'id_user'; // clé primaire personnalisée
+    public $incrementing = true;       // auto-incrément
+    protected $keyType = 'int';        // type entier
 
     protected $fillable = [
         'name',
@@ -28,11 +30,16 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
-    // Relation avec les projets via la table member_project
+    // 🔹 Relation avec les projets via member_project
     public function projects()
     {
-        return $this->belongsToMany(Project::class, 'member_project', 'user_id', 'project_id')
-                    ->withPivot('role')
-                    ->withTimestamps();
+        return $this->belongsToMany(
+            Project::class,
+            'member_project',   // table pivot
+            'user_id',          // FK dans member_project vers users.id_user
+            'project_id'        // FK dans member_project vers projects.id_projet
+        )
+        ->withPivot('role')
+        ->withTimestamps();
     }
 }

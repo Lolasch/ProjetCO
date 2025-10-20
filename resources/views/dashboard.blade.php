@@ -3,6 +3,8 @@
 @section('content')
 <h1>Tableau de bord</h1>
 
+<a href="{{ route('projects.create') }}">Créer un projet</a>
+
 @php
     $roles = ['manager' => [], 'employee' => [], 'client' => []];
 @endphp
@@ -22,7 +24,17 @@
         @else
             <ul>
                 @foreach($projList as $proj)
-                    <li>{{ $proj->name }}</li>
+                    <li>
+                        {{ $proj->name }}
+                        @if($role === 'manager')
+                            <a href="{{ route('projects.edit', $proj->id_project) }}">Modifier</a>
+                            <form action="{{ route('projects.destroy', $proj->id_project) }}" method="POST" style="display:inline;">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit">Supprimer</button>
+                            </form>
+                        @endif
+                    </li>
                 @endforeach
             </ul>
         @endif

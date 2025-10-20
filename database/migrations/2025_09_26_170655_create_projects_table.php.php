@@ -9,9 +9,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('projects', function (Blueprint $table) {
-            $table->id();           // id de projet
-            $table->string('name'); // nom du projet
-            $table->timestamps();   // created_at & updated_at
+            $table->id('id_project'); // clé primaire id_project (et PAS id_projet)
+            $table->string('name');
+            $table->timestamps();
         });
     }
 

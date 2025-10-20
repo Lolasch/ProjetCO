@@ -22,6 +22,31 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 //bord
 use App\Http\Controllers\DashboardController;
 
-Route::get('/dashboard', [DashboardController::class, 'index'])
-     ->middleware('auth')
-     ->name('dashboard');
+use App\Http\Controllers\ProjectController;
+
+
+// Dashboard (déjà existant)
+Route::get('/dashboard', [ProjectController::class, 'dashboard'])
+    ->middleware('auth')
+    ->name('dashboard');
+
+// Créer un projet
+Route::get('/projects/create', [ProjectController::class, 'create'])
+    ->middleware('auth')
+    ->name('projects.create');
+Route::post('/projects', [ProjectController::class, 'store'])
+    ->middleware('auth')
+    ->name('projects.store');
+
+// Modifier un projet
+Route::get('/projects/{project}/edit', [ProjectController::class, 'edit'])
+    ->middleware('auth')
+    ->name('projects.edit');
+Route::put('/projects/{project}', [ProjectController::class, 'update'])
+    ->middleware('auth')
+    ->name('projects.update');
+
+// Supprimer un projet
+Route::delete('/projects/{project}', [ProjectController::class, 'destroy'])
+    ->middleware('auth')
+    ->name('projects.destroy');
