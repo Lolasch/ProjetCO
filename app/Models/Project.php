@@ -27,4 +27,10 @@ class Project extends Model
         ->withPivot('role')
         ->withTimestamps();
     }
+
+    public function sprints()
+{
+    return $this->hasMany(Sprint::class, 'project_id');
+}
+
 }

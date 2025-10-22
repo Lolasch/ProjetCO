@@ -2,20 +2,16 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Sprint extends Model
 {
-    use HasFactory;
+    protected $table = 'sprints';
+    protected $primaryKey = 'id_sprint';
+    protected $fillable = ['project_id', 'name', 'start_date', 'end_date'];
 
-    protected $fillable = ['name', 'project_id', 'start_date', 'end_date'];
-
-    public function project() {
-        return $this->belongsTo(Project::class);
-    }
-
-    public function tasks() {
-        return $this->hasMany(Task::class);
+    public function project()
+    {
+        return $this->belongsTo(Project::class, 'project_id');
     }
 }

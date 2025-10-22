@@ -9,13 +9,15 @@ class Epic extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'project_id'];
+    protected $fillable = ['project_id', 'name', 'description'];
 
-    public function project() {
-        return $this->belongsTo(Project::class);
+    public function project()
+    {
+        return $this->belongsTo(Project::class, 'project_id', 'id_project');
     }
 
-    public function tasks() {
-        return $this->hasMany(Task::class);
+    public function tasks()
+    {
+        return $this->hasMany(Task::class, 'epic_id');
     }
 }

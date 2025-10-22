@@ -50,3 +50,26 @@ Route::put('/projects/{project}', [ProjectController::class, 'update'])
 Route::delete('/projects/{project}', [ProjectController::class, 'destroy'])
     ->middleware('auth')
     ->name('projects.destroy');
+
+// Créer un sprint
+Route::get('/projects/{project}/sprints/create', [SprintController::class, 'create'])->name('sprints.create');
+Route::post('/projects/{project}/sprints', [SprintController::class, 'store'])->name('sprints.store');
+
+
+// Créer un Epic
+use App\Http\Controllers\EpicController;
+
+Route::get('/projects/{project}/epics/create', [EpicController::class, 'create'])
+    ->middleware('auth')
+    ->name('epics.create');
+
+Route::post('/projects/{project}/epics', [EpicController::class, 'store'])
+    ->middleware('auth')
+    ->name('epics.store');
+
+use App\Http\Controllers\TaskController;
+
+// Routes pour les tâches
+Route::get('/sprints/{sprint}/tasks', [TaskController::class, 'index'])->name('tasks.index');
+Route::get('/sprints/{sprint}/tasks/create', [TaskController::class, 'create'])->name('tasks.create');
+Route::post('/sprints/{sprint}/tasks', [TaskController::class, 'store'])->name('tasks.store');
