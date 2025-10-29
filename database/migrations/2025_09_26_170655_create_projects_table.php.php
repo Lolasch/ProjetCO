@@ -6,20 +6,17 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-public function up(): void
-{
-    Schema::table('projects', function (Blueprint $table) {
-        $table->string('image')->nullable();
-        $table->date('start_date')->nullable();
-        $table->date('end_date')->nullable();
-    });
-}
+    public function up(): void
+    {
+        Schema::create('projects', function (Blueprint $table) {
+            $table->id('id_project');
+            $table->string('name');
+            $table->timestamps();
+        });
+    }
 
-public function down(): void
-{
-    Schema::table('projects', function (Blueprint $table) {
-        $table->dropColumn(['image', 'start_date', 'end_date']);
-    });
-}
-
+    public function down(): void
+    {
+        Schema::dropIfExists('projects');
+    }
 };

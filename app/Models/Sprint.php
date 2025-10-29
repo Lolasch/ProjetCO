@@ -11,7 +11,7 @@ class Sprint extends Model
 
     protected $table = 'sprints';
     protected $primaryKey = 'id_sprint';
-    protected $fillable = ['name', 'start_date', 'end_date', 'project_id'];
+    protected $fillable = ['name', 'start_date', 'end_date', 'project_id', 'color'];
 
     public function project()
     {

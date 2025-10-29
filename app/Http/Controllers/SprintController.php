@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Sprint;
 use App\Models\Project;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class SprintController extends Controller
 {
@@ -22,17 +21,17 @@ class SprintController extends Controller
             'name' => 'required|string|max:255',
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
+            'color' => 'nullable|string|max:7',
         ]);
 
         $project->sprints()->create([
             'name' => $request->name,
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
+            'color' => $request->color ?? '#1e40af',
         ]);
 
         return redirect()->route('projects.roadmap', $project->id_project)
                          ->with('success', 'Sprint créé avec succès !');
     }
-
-    // Optionnel : édition, mise à jour et suppression peuvent être ajoutées plus tard
 }

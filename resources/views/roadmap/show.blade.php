@@ -17,7 +17,7 @@
     <div id="calendar" class="mt-6 border rounded-lg shadow p-4"></div>
 </div>
 
-<!-- ✅ FullCalendar CSS & JS -->
+<!-- FullCalendar CSS & JS -->
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
 
@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
         height: 'auto',
-        locale: 'fr', // en français 🇫🇷
+        locale: 'fr',
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 title: '{{ $sprint->name }}',
                 start: '{{ $sprint->start_date }}',
                 end: '{{ $sprint->end_date }}',
-                color: '#1e40af', // bleu pour les sprints
+                color: '{{ $sprint->color ?? "#1e40af" }}',
                 extendedProps: {
                     epics: [
                         @foreach($sprint->epics as $epic)
