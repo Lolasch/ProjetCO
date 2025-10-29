@@ -10,7 +10,7 @@ class Project extends Model
     use HasFactory;
 
     protected $table = 'projects';
-    protected $primaryKey = 'id_project';  // nom exact de la colonne dans ta table
+    protected $primaryKey = 'id_project';
     public $incrementing = true;
     protected $keyType = 'int';
 
@@ -21,16 +21,15 @@ class Project extends Model
         return $this->belongsToMany(
             User::class,
             'member_project',
-            'project_id', // colonne dans member_project
-            'user_id'     // colonne dans member_project
+            'project_id',
+            'user_id'
         )
         ->withPivot('role')
         ->withTimestamps();
     }
 
     public function sprints()
-{
-    return $this->hasMany(Sprint::class, 'project_id');
-}
-
+    {
+        return $this->hasMany(Sprint::class, 'project_id');
+    }
 }

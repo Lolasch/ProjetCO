@@ -1,20 +1,21 @@
 @extends('layouts.app')
 
-@section('title', 'Créer une tâche')
-
 @section('content')
-<h2>Créer une nouvelle tâche pour le sprint : {{ $sprint->name }}</h2>
+<h1>Créer une tâche pour l'Epic : {{ $epic->name }}</h1>
 
-<form action="{{ route('tasks.store', $sprint->id_sprint) }}" method="POST">
+<form action="{{ route('tasks.store', $epic->id_epic) }}" method="POST">
     @csrf
-    <label>Titre :</label>
-    <input type="text" name="title" required><br><br>
+    <label>Nom de la tâche :</label><br>
+    <input type="text" name="name" required><br><br>
 
-    <label>Description :</label>
-    <textarea name="description"></textarea><br><br>
+    <label>Responsable :</label><br>
+    <input type="text" name="assignee"><br><br>
 
-    <label>Statut :</label>
-    <select name="status" required>
+    <label>Date limite :</label><br>
+    <input type="date" name="due_date"><br><br>
+
+    <label>Statut :</label><br>
+    <select name="status">
         <option value="todo">À faire</option>
         <option value="in_progress">En cours</option>
         <option value="done">Terminé</option>

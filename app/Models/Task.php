@@ -9,21 +9,22 @@ class Task extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['title', 'description', 'status', 'project_id', 'epic_id', 'sprint_id', 'user_id'];
+    protected $table = 'tasks';
+    protected $primaryKey = 'id_task';
+    protected $fillable = ['title', 'status', 'assigned_to', 'due_date', 'epic_id', 'sprint_id'];
 
-    public function project() {
-        return $this->belongsTo(Project::class);
+    public function epic()
+    {
+        return $this->belongsTo(Epic::class, 'epic_id');
     }
 
-    public function epic() {
-        return $this->belongsTo(Epic::class);
+    public function sprint()
+    {
+        return $this->belongsTo(Sprint::class, 'sprint_id');
     }
 
-    public function sprint() {
-        return $this->belongsTo(Sprint::class);
-    }
-
-    public function user() {
-        return $this->belongsTo(User::class);
+    public function assignee()
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
     }
 }

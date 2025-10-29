@@ -9,11 +9,18 @@ class Epic extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['project_id', 'name', 'description'];
+    protected $table = 'epics';
+    protected $primaryKey = 'id_epic';
+    protected $fillable = ['name', 'project_id', 'sprint_id'];
+
+    public function sprint()
+    {
+        return $this->belongsTo(Sprint::class, 'sprint_id');
+    }
 
     public function project()
     {
-        return $this->belongsTo(Project::class, 'project_id', 'id_project');
+        return $this->belongsTo(Project::class, 'project_id');
     }
 
     public function tasks()

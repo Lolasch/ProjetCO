@@ -2,11 +2,16 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\SprintController;
+use App\Http\Controllers\EpicController;
+use App\Http\Controllers\TaskController;
+use App\Http\Controllers\RoadmapController;
 
-// Page d’accueil avec choix connexion / inscription
-Route::get('/', function () {
-    return view('home');
-})->name('home');
+// --------------------
+// Authentification
+// --------------------
+Route::get('/', fn() => view('home'))->name('home');
 
 // Inscription
 Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
@@ -19,57 +24,52 @@ Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 // Déconnexion
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-//bord
-use App\Http\Controllers\DashboardController;
-
-use App\Http\Controllers\ProjectController;
-
-
-// Dashboard (déjà existant)
+// --------------------
+// Dashboard
+// --------------------
 Route::get('/dashboard', [ProjectController::class, 'dashboard'])
     ->middleware('auth')
     ->name('dashboard');
 
-// Créer un projet
-Route::get('/projects/create', [ProjectController::class, 'create'])
+// --------------------
+// Projets
+// --------------------
+Route::resource('projects', ProjectController::class)->middleware('auth');
+
+// Roadmap
+Route::get('/projects/{project}/roadmap', [RoadmapController::class, 'show'])
     ->middleware('auth')
-    ->name('projects.create');
-Route::post('/projects', [ProjectController::class, 'store'])
-    ->middleware('auth')
-    ->name('projects.store');
+    ->name('projects.roadmap');
 
-// Modifier un projet
-Route::get('/projects/{project}/edit', [ProjectController::class, 'edit'])
-    ->middleware('auth')
-    ->name('projects.edit');
-Route::put('/projects/{project}', [ProjectController::class, 'update'])
-    ->middleware('auth')
-    ->name('projects.update');
+// --------------------
+// Sprints (liés à un projet)
+// --------------------
+Route::middleware('auth')->group(function() {
+    Route::get('/projects/{project}/sprints/create', [SprintController::class, 'create'])->name('sprints.create');
+    Route::post('/projects/{project}/sprints', [SprintController::class, 'store'])->name('sprints.store');
+    Route::get('/sprints/{sprint}/edit', [SprintController::class, 'edit'])->name('sprints.edit');
+    Route::put('/sprints/{sprint}', [SprintController::class, 'update'])->name('sprints.update');
+    Route::delete('/sprints/{sprint}', [SprintController::class, 'destroy'])->name('sprints.destroy');
+});
 
-// Supprimer un projet
-Route::delete('/projects/{project}', [ProjectController::class, 'destroy'])
-    ->middleware('auth')
-    ->name('projects.destroy');
+// --------------------
+// Epics (liés à un sprint)
+// --------------------
+Route::middleware('auth')->group(function() {
+    Route::get('/sprints/{sprint}/epics/create', [EpicController::class, 'create'])->name('epics.create');
+    Route::post('/sprints/{sprint}/epics', [EpicController::class, 'store'])->name('epics.store');
+    Route::get('/epics/{epic}/edit', [EpicController::class, 'edit'])->name('epics.edit');
+    Route::put('/epics/{epic}', [EpicController::class, 'update'])->name('epics.update');
+    Route::delete('/epics/{epic}', [EpicController::class, 'destroy'])->name('epics.destroy');
+});
 
-// Créer un sprint
-Route::get('/projects/{project}/sprints/create', [SprintController::class, 'create'])->name('sprints.create');
-Route::post('/projects/{project}/sprints', [SprintController::class, 'store'])->name('sprints.store');
-
-
-// Créer un Epic
-use App\Http\Controllers\EpicController;
-
-Route::get('/projects/{project}/epics/create', [EpicController::class, 'create'])
-    ->middleware('auth')
-    ->name('epics.create');
-
-Route::post('/projects/{project}/epics', [EpicController::class, 'store'])
-    ->middleware('auth')
-    ->name('epics.store');
-
-use App\Http\Controllers\TaskController;
-
-// Routes pour les tâches
-Route::get('/sprints/{sprint}/tasks', [TaskController::class, 'index'])->name('tasks.index');
-Route::get('/sprints/{sprint}/tasks/create', [TaskController::class, 'create'])->name('tasks.create');
-Route::post('/sprints/{sprint}/tasks', [TaskController::class, 'store'])->name('tasks.store');
+// --------------------
+// Tâches (liées à un epic)
+// --------------------
+Route::middleware('auth')->group(function() {
+    Route::get('/epics/{epic}/tasks/create', [TaskController::class, 'create'])->name('tasks.create');
+    Route::post('/epics/{epic}/tasks', [TaskController::class, 'store'])->name('tasks.store');
+    Route::get('/tasks/{task}/edit', [TaskController::class, 'edit'])->name('tasks.edit');
+    Route::put('/tasks/{task}', [TaskController::class, 'update'])->name('tasks.update');
+    Route::delete('/tasks/{task}', [TaskController::class, 'destroy'])->name('tasks.destroy');
+});
