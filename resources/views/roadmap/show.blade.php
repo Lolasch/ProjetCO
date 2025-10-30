@@ -38,6 +38,11 @@
         </div>
     </div>
 </div>
+<a href="{{ route('dashboard') }}"
+   class="inline-block bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300 mb-4">
+    ← Retour aux projets
+</a>
+
 
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
