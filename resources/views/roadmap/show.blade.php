@@ -22,11 +22,9 @@
             <h3 id="epicTitle" class="text-lg font-bold"></h3>
             <button onclick="closeEpicModal()" class="text-gray-600 hover:text-gray-800">&times;</button>
         </div>
-
-        <div id="epicTasks" class="space-y-2 mb-4">
+        <div id="epicTasks" class="mb-4">
             <!-- Les tâches seront insérées ici -->
         </div>
-
         <div class="flex justify-between">
             <a id="addTaskBtn" href="#" class="bg-green-500 px-3 py-1 rounded text-white hover:bg-green-600 text-sm">+ Ajouter tâche</a>
             <div>
@@ -47,30 +45,36 @@
 <script>
 function openEpicModal(epic) {
     document.getElementById('epicTitle').innerText = epic.title;
-    document.getElementById('epicTasks').innerHTML = '';
+    const epicTasksDiv = document.getElementById('epicTasks');
+    epicTasksDiv.innerHTML = '';
 
-    if(epic.tasks && epic.tasks.length) {
-        epic.tasks.forEach(task => {
-            let taskEl = document.createElement('div');
-            taskEl.classList.add('p-2', 'border', 'rounded', 'text-sm', 'flex', 'justify-between', 'items-center', 'font-medium');
+    epic.tasks.forEach(task => {
+        let statusText = 'À faire';
+        let statusColor = 'bg-gray-300 text-gray-800';
+        if(task.status === 'in_progress') { statusText = 'En cours'; statusColor = 'bg-yellow-300 text-yellow-800'; }
+        else if(task.status === 'done') { statusText = 'Terminé'; statusColor = 'bg-green-300 text-green-800'; }
 
-            // Couleur du statut en français
-            let statusColor = 'bg-gray-400 text-white';
-            let statusText = task.status || 'À faire';
-            if(statusText === 'À faire') statusColor = 'bg-red-500 text-white';
-            else if(statusText === 'En cours') statusColor = 'bg-yellow-400 text-black';
-            else if(statusText === 'Terminé') statusColor = 'bg-green-500 text-white';
+        let taskEl = document.createElement('div');
+        taskEl.classList.add('mb-2', 'p-2', 'border', 'rounded', 'flex', 'justify-between', 'items-center');
 
-            taskEl.innerHTML = `<span>${task.title}</span> <span class="px-2 py-1 rounded ${statusColor}">${statusText}</span>`;
-            document.getElementById('epicTasks').appendChild(taskEl);
-        });
-    } else {
-        let noTask = document.createElement('div');
-        noTask.classList.add('text-gray-500', 'italic', 'text-sm');
-        noTask.innerText = 'Aucune tâche pour cet epic.';
-        document.getElementById('epicTasks').appendChild(noTask);
-    }
+        taskEl.innerHTML = `
+            <div class="flex items-center gap-2">
+                <span class="font-semibold">${task.title}</span>
+                <span class="px-2 py-1 rounded ${statusColor} text-sm">${statusText}</span>
+            </div>
+            <div class="flex gap-1">
+                <a href="/tasks/${task.id}/edit" class="bg-yellow-500 px-2 py-1 rounded text-white text-xs hover:bg-yellow-600">Modifier</a>
+                <form action="/tasks/${task.id}" method="POST" class="inline">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="bg-red-500 px-2 py-1 rounded text-white text-xs hover:bg-red-600">Supprimer</button>
+                </form>
+            </div>
+        `;
+        epicTasksDiv.appendChild(taskEl);
+    });
 
+    // Mettre à jour les liens
     document.getElementById('addTaskBtn').href = `/epics/${epic.id}/tasks/create`;
     document.getElementById('editEpicBtn').href = `/epics/${epic.id}/edit`;
     document.getElementById('deleteEpicForm').action = `/epics/${epic.id}`;
@@ -118,8 +122,9 @@ document.addEventListener('DOMContentLoaded', function() {
                             tasks: [
                                 @foreach($epic->tasks as $task)
                                 {
-                                    title: '{{ $task->name }}',
-                                    status: '{{ $task->status_fr ?? ($task->status ?? "À faire") }}'
+                                    id: '{{ $task->id_task }}',
+                                    title: '{{ $task->title }}',
+                                    status: '{{ $task->status }}'
                                 },
                                 @endforeach
                             ]
@@ -154,18 +159,13 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
             sprintEl.appendChild(btnContainer);
 
-            let epicsContainer = document.createElement('div');
-            epicsContainer.classList.add('flex', 'space-x-2', 'mt-2', 'flex-wrap');
-
             arg.event.extendedProps.epics.forEach(epic => {
                 let epicEl = document.createElement('div');
-                epicEl.classList.add('px-3', 'py-2', 'bg-gray-800', 'rounded', 'text-sm', 'text-white', 'cursor-pointer', 'font-semibold');
+                epicEl.classList.add('mt-1', 'px-2', 'py-2', 'bg-gray-700', 'text-white', 'rounded', 'text-sm', 'cursor-pointer', 'inline-block', 'mr-2', 'mb-2');
                 epicEl.innerText = epic.title;
                 epicEl.onclick = () => openEpicModal(epic);
-                epicsContainer.appendChild(epicEl);
+                sprintEl.appendChild(epicEl);
             });
-
-            sprintEl.appendChild(epicsContainer);
 
             return { domNodes: [sprintEl] };
         }

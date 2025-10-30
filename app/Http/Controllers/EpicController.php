@@ -8,28 +8,55 @@ use Illuminate\Http\Request;
 
 class EpicController extends Controller
 {
-    // Formulaire création d'epic
+    // 📘 Formulaire création d’un epic
     public function create(Sprint $sprint)
     {
         return view('epics.create', compact('sprint'));
     }
 
-    // Stocker l'epic
+    // 📗 Sauvegarde d’un epic
     public function store(Request $request, Sprint $sprint)
     {
         $request->validate([
             'name' => 'required|string|max:255',
         ]);
 
-      $sprint->epics()->create([
-    'name' => $request->name,
-    'project_id' => $sprint->project_id, // ⚡ On ajoute ça
-]);
-
+        $sprint->epics()->create([
+            'name' => $request->name,
+            'project_id' => $sprint->project_id,
+        ]);
 
         return redirect()->route('projects.roadmap', $sprint->project->id_project)
                          ->with('success', 'Epic créé avec succès !');
     }
 
-    // Optionnel : édition, mise à jour, suppression peuvent être ajoutées plus tard
+    // ✏️ Formulaire d’édition
+    public function edit(Epic $epic)
+    {
+        return view('epics.edit', compact('epic'));
+    }
+
+    // 💾 Mise à jour d’un epic
+    public function update(Request $request, Epic $epic)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+
+        $epic->update([
+            'name' => $request->name,
+        ]);
+
+        return redirect()->route('projects.roadmap', $epic->project_id)
+                         ->with('success', 'Epic mis à jour avec succès !');
+    }
+
+    // ❌ Suppression d’un epic
+    public function destroy(Epic $epic)
+    {
+        $epic->delete();
+
+        return redirect()->route('projects.roadmap', $epic->project_id)
+                         ->with('success', 'Epic supprimé avec succès !');
+    }
 }

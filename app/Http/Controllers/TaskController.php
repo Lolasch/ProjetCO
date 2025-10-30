@@ -2,41 +2,74 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Task;
 use App\Models\Epic;
+use App\Models\Task;
 use Illuminate\Http\Request;
 
 class TaskController extends Controller
 {
-    // Formulaire création tâche
+    // 📘 Formulaire création d’une tâche
     public function create(Epic $epic)
     {
         return view('tasks.create', compact('epic'));
     }
 
-    // Stocker la tâche
+    // 📗 Sauvegarde d’une tâche
     public function store(Request $request, Epic $epic)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'assignee' => 'nullable|string|max:255', // ou user_id si tu veux relier à un user
-            'due_date' => 'nullable|date',
-            'status' => 'required|string|in:todo,in_progress,done',
+            'title' => 'required|string|max:255',
+            'status' => 'required|in:todo,in_progress,done',
         ]);
 
-$epic->tasks()->create([
-    'title' => $request->name,
-    'assigned_to' => $request->assigned_to, // ou null si tu veux pour l'instant
-    'due_date' => $request->due_date,
-    'status' => $request->status ?? 'À faire',
-    'epic_id' => $epic->id_epic,
-    'sprint_id' => $epic->sprint_id, // si tu veux relier à un sprint
-]);
+        $epic->tasks()->create([
+            'title' => $request->title,
+            'description' => $request->description,
+            'status' => $request->status,
+            'epic_id' => $epic->id_epic,
+            'sprint_id' => $epic->sprint_id,
+        ]);
 
-
-        return redirect()->route('projects.roadmap', $epic->sprint->project->id_project)
+        return redirect()->route('projects.roadmap', $epic->project_id)
                          ->with('success', 'Tâche créée avec succès !');
     }
 
-    // Optionnel : édition, mise à jour, suppression peuvent être ajoutées plus tard
+    // ✏️ Formulaire de modification
+// ✏️ Formulaire de modification
+public function edit(Task $task)
+{
+    // On récupère toutes les epics du même projet pour le menu déroulant
+    $epics = \App\Models\Epic::where('project_id', $task->epic->project_id ?? null)->get();
+
+    return view('tasks.edit', compact('task', 'epics'));
+}
+
+
+    // 💾 Mise à jour d’une tâche
+    public function update(Request $request, Task $task)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'status' => 'required|in:todo,in_progress,done',
+        ]);
+
+        $task->update([
+            'title' => $request->title,
+            'description' => $request->description,
+            'status' => $request->status,
+        ]);
+
+        return redirect()->route('projects.roadmap', $task->epic->project_id)
+                         ->with('success', 'Tâche mise à jour avec succès !');
+    }
+
+    // ❌ Suppression d’une tâche
+    public function destroy(Task $task)
+    {
+        $projectId = $task->epic->project_id;
+        $task->delete();
+
+        return redirect()->route('projects.roadmap', $projectId)
+                         ->with('success', 'Tâche supprimée avec succès !');
+    }
 }
