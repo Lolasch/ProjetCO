@@ -16,7 +16,7 @@ class ProjectController extends Controller
     public function dashboard()
     {
         $user = Auth::user();
-        $projects = $user->projects; // tous les projets liés à l'utilisateur
+        $projects = $user->projects;
         return view('dashboard', compact('projects'));
     }
 
@@ -28,7 +28,6 @@ class ProjectController extends Controller
         return view('projects.create');
     }
 
-    // Sauvegarder un projet
     public function store(Request $request)
     {
         $request->validate([
@@ -39,7 +38,6 @@ class ProjectController extends Controller
             'name' => $request->name,
         ]);
 
-        // Ajouter le créateur en manager
         $user = Auth::user();
         $project->members()->attach($user->id_user, ['role' => 'manager']);
 
@@ -54,7 +52,6 @@ class ProjectController extends Controller
         return view('projects.edit', compact('project'));
     }
 
-    // Mettre à jour un projet
     public function update(Request $request, Project $project)
     {
         $request->validate([
@@ -74,42 +71,59 @@ class ProjectController extends Controller
     public function destroy(Project $project)
     {
         $project->delete();
-
         return redirect()->route('dashboard')->with('success', 'Projet supprimé avec succès.');
     }
 
     // ==============================
-    // KANBAN
-    // ==============================
-    public function kanban(Project $project)
-    {
-        // On récupère le sprint le plus proche dans le temps
-        $currentSprint = $project->sprints()
-            ->where('end_date', '>=', now())
-            ->orderBy('start_date', 'asc')
-            ->first();
+// KANBAN
+// ==============================
+public function kanban(Project $project, Request $request)
+{
+    // Récupérer tous les sprints du projet triés par date
+    $sprints = $project->sprints()->orderBy('start_date')->get();
 
-        // Si aucun sprint n'existe, redirection
-        if (!$currentSprint) {
-            return redirect()->route('projects.roadmap', $project->id_project)
-                            ->with('error', 'Aucun sprint disponible pour ce projet.');
-        }
+    // Sprint sélectionné ou premier par défaut
+    $sprintId = $request->query('sprint'); // via GET
+    $sprint = $sprintId ? $sprints->find($sprintId) : $sprints->first();
 
-        // Récupérer toutes les tâches du sprint
-        $tasks = Task::whereHas('epic', function ($query) use ($currentSprint) {
-            $query->where('sprint_id', $currentSprint->id);
-        })->with('epic')->get();
-
-        // Regrouper les tâches par statut
-        $tasksByStatus = [
-            'todo' => $tasks->where('status', 'todo'),
-            'in_progress' => $tasks->where('status', 'in_progress'),
-            'done' => $tasks->where('status', 'done'),
-        ];
-
-        // Récupérer tous les sprints du projet
-        $allSprints = $project->sprints()->orderBy('start_date', 'asc')->get();
-
-        return view('kanban.show', compact('project', 'currentSprint', 'tasksByStatus', 'allSprints'));
+    if (!$sprint) {
+        return redirect()->route('dashboard')->with('error', 'Aucun sprint trouvé pour ce projet.');
     }
+
+    // Récupérer toutes les tâches de ce sprint via les epics
+    $tasks = $sprint->epics()->with('tasks')->get()->flatMap(function ($epic) {
+        return $epic->tasks;
+    });
+
+    // Ajouter les tâches du sprint qui n'ont pas d'epic
+    $tasks = $tasks->merge(Task::where('sprint_id', $sprint->id_sprint)
+        ->whereNull('epic_id')
+        ->get());
+
+    // Grouper les tâches par statut
+    $tasksByStatus = [
+        'todo' => $tasks->where('status', 'todo'),
+        'in_progress' => $tasks->where('status', 'in_progress'),
+        'done' => $tasks->where('status', 'done'),
+    ];
+
+    return view('kanban.show', compact('project', 'sprint', 'sprints', 'tasksByStatus'));
+}
+
+public function storeKanbanTask(Request $request, Project $project, $sprintId)
+{
+    $request->validate([
+        'title' => 'required|string|max:255',
+        'status' => 'required|in:todo,in_progress,done',
+    ]);
+
+    Task::create([
+        'title' => $request->title,
+        'status' => $request->status,
+        'sprint_id' => $sprintId,
+    ]);
+
+    return back()->with('success', 'Tâche ajoutée au Kanban !');
+}
+
 }

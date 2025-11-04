@@ -75,6 +75,12 @@ Route::middleware('auth')->group(function() {
 });
 
 // Kanban (lié à un projet)
-Route::get('/projects/{project}/kanban', [ProjectController::class, 'kanban'])
-    ->middleware('auth')
+Route::get('/projects/{project}/kanban/{sprint?}', [ProjectController::class, 'kanban'])
     ->name('projects.kanban');
+
+    Route::get('/projects/{project}/kanban', [ProjectController::class, 'kanban'])
+    ->name('projects.kanban');
+
+Route::post('/projects/{project}/kanban/{sprint}/tasks', [ProjectController::class, 'storeKanbanTask'])
+    ->name('kanban.tasks.store');
+
