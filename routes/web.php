@@ -73,3 +73,8 @@ Route::middleware('auth')->group(function() {
     Route::put('/tasks/{task}', [TaskController::class, 'update'])->name('tasks.update');
     Route::delete('/tasks/{task}', [TaskController::class, 'destroy'])->name('tasks.destroy');
 });
+
+// Kanban (lié à un projet)
+Route::get('/projects/{project}/kanban', [ProjectController::class, 'kanban'])
+    ->middleware('auth')
+    ->name('projects.kanban');

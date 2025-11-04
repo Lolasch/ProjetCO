@@ -3,13 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
-use App\Models\User;
+use App\Models\Sprint;
+use App\Models\Task;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class ProjectController extends Controller
 {
-    // Dashboard
+    // ==============================
+    // DASHBOARD
+    // ==============================
     public function dashboard()
     {
         $user = Auth::user();
@@ -17,13 +20,15 @@ class ProjectController extends Controller
         return view('dashboard', compact('projects'));
     }
 
-    // Formulaire création
+    // ==============================
+    // CREATION DE PROJET
+    // ==============================
     public function create()
     {
         return view('projects.create');
     }
 
-    // Stocker le projet
+    // Sauvegarder un projet
     public function store(Request $request)
     {
         $request->validate([
@@ -41,13 +46,15 @@ class ProjectController extends Controller
         return redirect()->route('dashboard')->with('success', 'Projet créé avec succès !');
     }
 
-    // Formulaire édition
+    // ==============================
+    // MODIFICATION DE PROJET
+    // ==============================
     public function edit(Project $project)
     {
         return view('projects.edit', compact('project'));
     }
 
-    // Mettre à jour le projet
+    // Mettre à jour un projet
     public function update(Request $request, Project $project)
     {
         $request->validate([
@@ -61,12 +68,48 @@ class ProjectController extends Controller
         return redirect()->route('dashboard')->with('success', 'Projet mis à jour !');
     }
 
-    // Supprimer un projet
+    // ==============================
+    // SUPPRESSION DE PROJET
+    // ==============================
     public function destroy(Project $project)
     {
-     $project->delete();
+        $project->delete();
 
         return redirect()->route('dashboard')->with('success', 'Projet supprimé avec succès.');
     }
 
+    // ==============================
+    // KANBAN
+    // ==============================
+    public function kanban(Project $project)
+    {
+        // On récupère le sprint le plus proche dans le temps
+        $currentSprint = $project->sprints()
+            ->where('end_date', '>=', now())
+            ->orderBy('start_date', 'asc')
+            ->first();
+
+        // Si aucun sprint n'existe, redirection
+        if (!$currentSprint) {
+            return redirect()->route('projects.roadmap', $project->id_project)
+                            ->with('error', 'Aucun sprint disponible pour ce projet.');
+        }
+
+        // Récupérer toutes les tâches du sprint
+        $tasks = Task::whereHas('epic', function ($query) use ($currentSprint) {
+            $query->where('sprint_id', $currentSprint->id);
+        })->with('epic')->get();
+
+        // Regrouper les tâches par statut
+        $tasksByStatus = [
+            'todo' => $tasks->where('status', 'todo'),
+            'in_progress' => $tasks->where('status', 'in_progress'),
+            'done' => $tasks->where('status', 'done'),
+        ];
+
+        // Récupérer tous les sprints du projet
+        $allSprints = $project->sprints()->orderBy('start_date', 'asc')->get();
+
+        return view('kanban.show', compact('project', 'currentSprint', 'tasksByStatus', 'allSprints'));
+    }
 }

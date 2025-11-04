@@ -41,7 +41,11 @@
                                 <h3 class="text-lg font-bold mb-2">{{ $proj->name }}</h3>
 
                                 <div class="flex justify-between mb-3">
-                                    <a href="#" class="bg-indigo-500 text-white px-3 py-1 rounded-lg hover:bg-indigo-600 text-sm">Kanban</a>
+                                    <a href="{{ route('projects.kanban', $proj->id_project) }}"
+   class="bg-indigo-500 text-white px-3 py-1 rounded-lg hover:bg-indigo-600 text-sm">
+   Kanban
+</a>
+
                                     <a href="{{ route('projects.roadmap', $proj->id_project) }}">
     Roadmap
 </a>
