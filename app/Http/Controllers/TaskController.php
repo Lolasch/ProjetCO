@@ -8,14 +8,45 @@ use Illuminate\Http\Request;
 
 class TaskController extends Controller
 {
-    // ... tes autres méthodes restent inchangées
+    // -----------------------------
+    // Création d’une tâche depuis roadmap (epic)
+    // -----------------------------
+    public function create(Epic $epic)
+    {
+        return view('tasks.create', compact('epic'));
+    }
 
-    // 💾 Mise à jour d’une tâche (pour modal Kanban)
+    public function store(Request $request, Epic $epic)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'status' => 'required|in:todo,in_progress,done',
+        ]);
+
+        Task::create([
+            'title' => $request->title,
+            'status' => $request->status,
+            'epic_id' => $epic->id_epic,
+            'sprint_id' => $epic->sprint_id,
+        ]);
+
+        return redirect()->route('projects.roadmap', $epic->sprint->project_id)
+                         ->with('success', 'Tâche créée avec succès !');
+    }
+
+    // -----------------------------
+    // Édition d’une tâche (modal Kanban)
+    // -----------------------------
+    public function edit(Task $task)
+    {
+        return view('tasks.edit', compact('task'));
+    }
+
     public function update(Request $request, Task $task)
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            'status' => 'nullable|in:todo,in_progress,done', // status reste optionnel ici
+            'status' => 'nullable|in:todo,in_progress,done',
             'description' => 'nullable|string',
             'epic_id' => 'nullable|exists:epics,id_epic'
         ]);
@@ -27,13 +58,14 @@ class TaskController extends Controller
             'status' => $request->status ?? $task->status
         ]);
 
-        // 🔁 Redirection vers la même page Kanban
         $projectId = $task->sprint->project_id ?? $task->epic->project_id ?? null;
         return redirect()->route('projects.kanban', $projectId)
             ->with('success', 'Tâche mise à jour avec succès !');
     }
 
-    // ❌ Suppression d’une tâche
+    // -----------------------------
+    // Suppression d’une tâche
+    // -----------------------------
     public function destroy(Task $task)
     {
         $projectId = $task->sprint->project_id ?? $task->epic->project_id ?? null;

@@ -102,8 +102,16 @@ class ProjectController extends Controller
         'done' => $tasks->where('status', 'done'),
     ];
 
-    return view('kanban.show', compact('project', 'sprint', 'sprints', 'tasksByStatus'));
+    // 🔹 Comptage des tâches par colonne
+    $tasksCount = [
+        'todo' => $tasksByStatus['todo']->count(),
+        'in_progress' => $tasksByStatus['in_progress']->count(),
+        'done' => $tasksByStatus['done']->count(),
+    ];
+
+    return view('kanban.show', compact('project', 'sprint', 'sprints', 'tasksByStatus', 'tasksCount'));
 }
+
 
 
 public function storeKanbanTask(Request $request, Project $project, $sprintId)

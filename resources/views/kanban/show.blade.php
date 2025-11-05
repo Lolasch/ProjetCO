@@ -34,7 +34,10 @@
     <div class="flex space-x-4 overflow-x-auto">
         @foreach(['todo' => 'À faire', 'in_progress' => 'En cours', 'done' => 'Terminé'] as $statusKey => $statusLabel)
             <div class="bg-gray-100 rounded-2xl p-4 w-80 flex flex-col">
-                <h2 class="text-xl font-bold mb-4">{{ $statusLabel }}</h2>
+                <h2 class="text-xl font-bold mb-4">
+                    {{ $statusLabel }}
+                    <span class="text-sm text-gray-600">({{ $tasksCount[$statusKey] ?? 0 }})</span>
+                </h2>
                 <div class="flex flex-col space-y-2 min-h-[50px] kanban-column" data-status="{{ $statusKey }}">
                     @if(isset($tasksByStatus[$statusKey]))
                         @foreach($tasksByStatus[$statusKey] as $task)
