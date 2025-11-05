@@ -3,56 +3,57 @@
 @section('content')
 <div class="px-8 py-6">
     <h1 class="text-3xl font-bold mb-6 text-center">Kanban - {{ $project->name }}</h1>
-
-    <!-- Retour aux projets -->
     <div class="mb-4">
-        <a href="{{ route('dashboard') }}"
-           class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-400">
+        <a href="{{ route('dashboard') }}" class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-400">
             ← Retour aux projets
         </a>
     </div>
-
-    <!-- Sélection du sprint -->
     <div class="mb-6">
         <form method="GET" action="{{ route('projects.kanban', $project->id_project) }}">
             <label for="sprint">Sprint :</label>
             <select name="sprint" id="sprint" onchange="this.form.submit()" class="border rounded p-1">
                 @foreach($sprints as $s)
-                    <option value="{{ $s->id_sprint }}" {{ $sprint->id_sprint == $s->id_sprint ? 'selected' : '' }}>
+                    <option value="{{ $s->id_sprint }}" {{ ($sprint && $sprint->id_sprint == $s->id_sprint) ? 'selected' : '' }}>
                         {{ $s->name }} ({{ $s->start_date }} → {{ $s->end_date }})
                     </option>
                 @endforeach
             </select>
         </form>
     </div>
-
-    <!-- Kanban -->
     <div class="flex space-x-4 overflow-x-auto">
         @foreach(['todo' => 'À faire', 'in_progress' => 'En cours', 'done' => 'Terminé'] as $statusKey => $statusLabel)
             <div class="bg-gray-100 rounded-2xl p-4 w-80 flex flex-col">
                 <h2 class="text-xl font-bold mb-4">{{ $statusLabel }}</h2>
                 <div class="flex flex-col space-y-2 min-h-[50px] kanban-column" data-status="{{ $statusKey }}">
-                    @foreach($tasksByStatus[$statusKey] as $task)
-                        <div
-                            class="bg-white rounded p-2 shadow flex justify-between items-center kanban-task"
-                            data-id="{{ $task->id_task }}"
-                            draggable="true"
-                            onclick="openTaskModal(
-                                {{ $task->id_task }},
-                                @json($task->title),
-                                @json($task->description ?? ''),
-                                @json($task->status),
-                                @json($task->epic_id)
-                            )"
-                        >
-                            <span>{{ $task->title }}</span>
-                            @if($task->epic)
-                                <span class="text-xs text-white bg-blue-500 rounded px-1 py-0.5 ml-2">
-                                    Epic : {{ $task->epic->name }}
-                                </span>
-                            @endif
-                        </div>
-                    @endforeach
+                    @if(isset($tasksByStatus[$statusKey]))
+                        @foreach($tasksByStatus[$statusKey] as $task)
+                            <div
+                                class="bg-white rounded p-2 shadow flex justify-between items-center kanban-task"
+                                data-id="{{ $task->id_task }}"
+                                draggable="true"
+                            >
+                                <div>
+                                    <span>{{ $task->title }}</span>
+                                    @if($task->epic)
+                                        <span class="text-xs text-white bg-blue-500 rounded px-1 py-0.5 ml-2">
+                                            Epic : {{ $task->epic->name }}
+                                        </span>
+                                    @endif
+                                </div>
+                              <button
+    type="button"
+    class="ml-2 px-2 py-1 bg-gray-200 text-blue-600 rounded hover:bg-blue-100 focus:outline-none open-modal-btn"
+    data-id="{{ $task->id_task }}"
+    data-title="{{ e($task->title) }}"
+    data-description="{{ e($task->description ?? '') }}"
+    data-status="{{ $task->status }}"
+    data-epic="{{ $task->epic_id }}"
+    title="Visualiser / éditer"
+>Visualiser</button>
+
+                            </div>
+                        @endforeach
+                    @endif
                 </div>
                 <form action="{{ route('kanban.tasks.store', [$project->id_project, $sprint->id_sprint]) }}" method="POST" class="mt-2">
                     @csrf
@@ -67,7 +68,7 @@
     </div>
 </div>
 
-<!-- Popup Modal édition -->
+<!-- MODAL D'ÉDITION -->
 <div id="taskModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
     <div class="bg-white rounded-lg shadow-lg w-96 p-6 relative">
         <h2 class="text-xl font-bold mb-4">Modifier la tâche</h2>
@@ -86,9 +87,11 @@
                 <label class="block text-sm font-medium">Associer à un Epic :</label>
                 <select name="epic_id" id="taskEpic" class="border rounded w-full p-2">
                     <option value="">Aucun</option>
-                    @foreach($sprint->epics as $epic)
-                        <option value="{{ $epic->id_epic }}">{{ $epic->name }}</option>
-                    @endforeach
+                    @if(isset($sprint->epics))
+                        @foreach($sprint->epics as $epic)
+                            <option value="{{ $epic->id_epic }}">{{ $epic->name }}</option>
+                        @endforeach
+                    @endif
                 </select>
             </div>
             <div class="flex justify-between mt-4">
@@ -103,63 +106,73 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    // DRAG & DROP
-    let draggedTask = null;
-
-    document.querySelectorAll('.kanban-task').forEach(task => {
-        task.addEventListener('dragstart', e => {
-            draggedTask = task;
-            e.dataTransfer.setData('text/plain', task.dataset.id);
-        });
+let dragged = null;
+document.querySelectorAll('.kanban-task').forEach(task => {
+    task.addEventListener('dragstart', (e) => {
+        dragged = task;
+        setTimeout(() => (task.style.display = 'none'), 0);
     });
-
-    document.querySelectorAll('.kanban-column').forEach(column => {
-        column.addEventListener('dragover', e => e.preventDefault());
-        column.addEventListener('drop', e => {
-            e.preventDefault();
-            if (!draggedTask) return;
-            column.appendChild(draggedTask);
-            const taskId = draggedTask.dataset.id;
-            // Ajax update statut
-            fetch(`/kanban/tasks/${taskId}/move`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ status: column.dataset.status })
-            });
-        });
+    task.addEventListener('dragend', (e) => {
+        dragged = null;
+        task.style.display = '';
     });
-
-    // MODAL: POPUP édition
-    window.openTaskModal = function(id, title, description, status, epicId) {
-        document.getElementById('taskModal').classList.remove('hidden');
-        document.getElementById('taskModal').classList.add('flex');
-        document.getElementById('taskTitle').value = title;
-        document.getElementById('taskDescription').value = description;
-        document.getElementById('taskEpic').value = epicId || '';
-        document.getElementById('taskForm').action = `/projects/{{ $project->id_project }}/sprints/{{ $sprint->id_sprint }}/tasks/${id}/update`;
-        document.getElementById('deleteButton').onclick = () => deleteTask(id);
-    };
-    window.closeTaskModal = function() {
-        document.getElementById('taskModal').classList.add('hidden');
-        document.getElementById('taskModal').classList.remove('flex');
-    };
-    window.deleteTask = function(id) {
-        if (confirm('Supprimer cette tâche ?')) {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = `/projects/{{ $project->id_project }}/sprints/{{ $sprint->id_sprint }}/tasks/${id}/delete`;
-            form.innerHTML = `
-                @csrf
-                @method('DELETE')
-            `;
-            document.body.appendChild(form);
-            form.submit();
-        }
-    };
 });
+document.querySelectorAll('.kanban-column').forEach(column => {
+    column.addEventListener('dragover', function(e) { e.preventDefault(); });
+    column.addEventListener('drop', function(e) {
+        e.preventDefault();
+        if (!dragged) return;
+        this.appendChild(dragged);
+        const taskId = dragged.dataset.id;
+        fetch(`/kanban/tasks/${taskId}/move`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status: this.dataset.status })
+        });
+    });
+});
+function openTaskModal(id, title, description, status, epicId) {
+    document.getElementById('taskModal').classList.remove('hidden');
+    document.getElementById('taskModal').classList.add('flex');
+    document.getElementById('taskTitle').value = title;
+    document.getElementById('taskDescription').value = description;
+    document.getElementById('taskEpic').value = epicId || '';
+    document.getElementById('taskForm').action =
+        `/projects/{{ $project->id_project }}/sprints/{{ $sprint->id_sprint }}/tasks/${id}/update`;
+    document.getElementById('deleteButton').onclick = function() { deleteTask(id); };
+}
+function closeTaskModal() {
+    document.getElementById('taskModal').classList.add('hidden');
+    document.getElementById('taskModal').classList.remove('flex');
+}
+function deleteTask(id) {
+    if (confirm('Supprimer cette tâche ?')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/projects/{{ $project->id_project }}/sprints/{{ $sprint->id_sprint }}/tasks/${id}/delete`;
+        form.innerHTML = `
+            @csrf
+            @method('DELETE')
+        `;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+document.querySelectorAll('.open-modal-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const id = btn.dataset.id;
+        const title = btn.dataset.title;
+        const description = btn.dataset.description;
+        const status = btn.dataset.status;
+        const epicId = btn.dataset.epic;
+
+        openTaskModal(id, title, description, status, epicId);
+    });
+});
+
 </script>
 @endsection

@@ -12,16 +12,10 @@ use App\Http\Controllers\RoadmapController;
 // Authentification
 // --------------------
 Route::get('/', fn() => view('home'))->name('home');
-
-// Inscription
 Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.submit');
-
-// Connexion
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
-
-// Déconnexion
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // --------------------
@@ -35,6 +29,7 @@ Route::get('/dashboard', [ProjectController::class, 'dashboard'])
 // Projets
 // --------------------
 Route::resource('projects', ProjectController::class)->middleware('auth');
+Route::get('/projects/{project}/reporting', [ProjectController::class, 'reporting'])->name('projects.reporting');
 
 // Roadmap
 Route::get('/projects/{project}/roadmap', [RoadmapController::class, 'show'])
@@ -74,13 +69,15 @@ Route::middleware('auth')->group(function() {
     Route::delete('/tasks/{task}', [TaskController::class, 'destroy'])->name('tasks.destroy');
 });
 
-// Kanban (lié à un projet)
+// --------------------
+// Kanban (affichage + actions sprint)
+// --------------------
 Route::get('/projects/{project}/kanban/{sprint?}', [ProjectController::class, 'kanban'])
-    ->name('projects.kanban');
-
-    Route::get('/projects/{project}/kanban', [ProjectController::class, 'kanban'])
     ->name('projects.kanban');
 
 Route::post('/projects/{project}/kanban/{sprint}/tasks', [ProjectController::class, 'storeKanbanTask'])
     ->name('kanban.tasks.store');
 
+// DRAG & DROP (update AJAX)
+Route::post('/kanban/tasks/{task}/move', [ProjectController::class, 'moveTask'])
+    ->name('kanban.tasks.move');

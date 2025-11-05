@@ -57,11 +57,9 @@ class ProjectController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
         ]);
-
         $project->update([
             'name' => $request->name,
         ]);
-
         return redirect()->route('dashboard')->with('success', 'Projet mis à jour !');
     }
 
@@ -75,55 +73,85 @@ class ProjectController extends Controller
     }
 
     // ==============================
-// KANBAN
-// ==============================
-public function kanban(Project $project, Request $request)
-{
-    // Récupérer tous les sprints du projet triés par date
-    $sprints = $project->sprints()->orderBy('start_date')->get();
+    // KANBAN
+    // ==============================
+    public function kanban(Project $project, Request $request)
+    {
+        $sprints = $project->sprints()->orderBy('start_date')->get();
 
-    // Sprint sélectionné ou premier par défaut
-    $sprintId = $request->query('sprint'); // via GET
-    $sprint = $sprintId ? $sprints->find($sprintId) : $sprints->first();
+        $sprintId = $request->query('sprint');
+        $sprint = $sprintId ? $sprints->find($sprintId) : $sprints->first();
 
-    if (!$sprint) {
-        return redirect()->route('dashboard')->with('error', 'Aucun sprint trouvé pour ce projet.');
+        if (!$sprint) {
+            return redirect()->route('dashboard')->with('error', 'Aucun sprint trouvé pour ce projet.');
+        }
+
+        $tasks = $sprint->epics()->with('tasks')->get()->flatMap(function ($epic) {
+            return $epic->tasks;
+        });
+        $tasks = $tasks->merge(Task::where('sprint_id', $sprint->id_sprint)
+            ->whereNull('epic_id')
+            ->get());
+
+        $tasksByStatus = [
+            'todo' => $tasks->where('status', 'todo'),
+            'in_progress' => $tasks->where('status', 'in_progress'),
+            'done' => $tasks->where('status', 'done'),
+        ];
+
+        return view('kanban.show', compact('project', 'sprint', 'sprints', 'tasksByStatus'));
     }
 
-    // Récupérer toutes les tâches de ce sprint via les epics
-    $tasks = $sprint->epics()->with('tasks')->get()->flatMap(function ($epic) {
-        return $epic->tasks;
-    });
+    public function storeKanbanTask(Request $request, Project $project, $sprintId)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'status' => 'required|in:todo,in_progress,done',
+        ]);
 
-    // Ajouter les tâches du sprint qui n'ont pas d'epic
-    $tasks = $tasks->merge(Task::where('sprint_id', $sprint->id_sprint)
-        ->whereNull('epic_id')
-        ->get());
+        Task::create([
+            'title' => $request->title,
+            'status' => $request->status,
+            'sprint_id' => $sprintId,
+        ]);
 
-    // Grouper les tâches par statut
-    $tasksByStatus = [
-        'todo' => $tasks->where('status', 'todo'),
-        'in_progress' => $tasks->where('status', 'in_progress'),
-        'done' => $tasks->where('status', 'done'),
-    ];
+        return back()->with('success', 'Tâche ajoutée au Kanban !');
+    }
 
-    return view('kanban.show', compact('project', 'sprint', 'sprints', 'tasksByStatus'));
-}
+    // ============== AJOUT CRUCIAL : sauvegarde drag&drop AJAX
+    public function moveTask(Request $request, Task $task)
+    {
+        $request->validate([
+            'status' => 'required|in:todo,in_progress,done',
+        ]);
+        $task->status = $request->status;
+        $task->save();
 
-public function storeKanbanTask(Request $request, Project $project, $sprintId)
+        return response()->json(['success' => true]);
+    }
+
+public function reporting(Project $project)
 {
-    $request->validate([
-        'title' => 'required|string|max:255',
-        'status' => 'required|in:todo,in_progress,done',
-    ]);
+    $sprints = $project->sprints()->with(['epics.tasks', 'tasks'])->get();
+    $tasks = collect();
+    foreach ($sprints as $sprint) {
+        foreach ($sprint->epics as $epic) {
+            $tasks = $tasks->merge($epic->tasks);
+        }
+        $tasks = $tasks->merge($sprint->tasks); // CA MARCHERA ICI
+    }
 
-    Task::create([
-        'title' => $request->title,
-        'status' => $request->status,
-        'sprint_id' => $sprintId,
-    ]);
+    $count_todo = $tasks->where('status', 'todo')->count();
+    $count_progress = $tasks->where('status', 'in_progress')->count();
+    $count_done = $tasks->where('status', 'done')->count();
+    $count_total = $tasks->count();
 
-    return back()->with('success', 'Tâche ajoutée au Kanban !');
+    $members = $project->members;
+
+    return view('projects.reporting', compact(
+        'project', 'tasks', 'count_todo', 'count_progress', 'count_done', 'count_total', 'members'
+    ));
+
 }
 
 }

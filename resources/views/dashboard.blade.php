@@ -50,6 +50,12 @@
     Roadmap
 </a>
 
+<a href="{{ route('projects.reporting', $proj->id_project) }}"
+   class="bg-fuchsia-600 text-white px-3 py-1 rounded-lg hover:bg-fuchsia-700 text-sm">
+   Visualiser
+</a>
+
+
                                 </div>
 
                                 <div class="text-sm text-gray-600 mb-2">

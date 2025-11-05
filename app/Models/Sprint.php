@@ -21,5 +21,12 @@ class Sprint extends Model
     public function epics()
     {
         return $this->hasMany(Epic::class, 'sprint_id');
+
     }
+    // Une sprint peut avoir des tâches (hors epic)
+public function tasks()
+{
+    return $this->hasMany(Task::class, 'sprint_id')->whereNull('epic_id');
+}
+
 }
