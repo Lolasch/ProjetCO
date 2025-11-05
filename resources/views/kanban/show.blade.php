@@ -10,17 +10,25 @@
         </a>
     </div>
 
+    <!-- Sélection du sprint ou bouton créer un sprint -->
     <div class="mb-6">
-        <form method="GET" action="{{ route('projects.kanban', $project->id_project) }}">
-            <label for="sprint">Sprint :</label>
-            <select name="sprint" id="sprint" onchange="this.form.submit()" class="border rounded p-1">
-                @foreach($sprints as $s)
-                    <option value="{{ $s->id_sprint }}" {{ ($sprint && $sprint->id_sprint == $s->id_sprint) ? 'selected' : '' }}>
-                        {{ $s->name }} ({{ $s->start_date }} → {{ $s->end_date }})
-                    </option>
-                @endforeach
-            </select>
-        </form>
+        @if($sprints->count() > 0)
+            <form method="GET" action="{{ route('projects.kanban', $project->id_project) }}">
+                <label for="sprint">Sprint :</label>
+                <select name="sprint" id="sprint" onchange="this.form.submit()" class="border rounded p-1">
+                    @foreach($sprints as $s)
+                        <option value="{{ $s->id_sprint }}" {{ ($sprint && $sprint->id_sprint == $s->id_sprint) ? 'selected' : '' }}>
+                            {{ $s->name }} ({{ $s->start_date }} → {{ $s->end_date }})
+                        </option>
+                    @endforeach
+                </select>
+            </form>
+        @else
+            <a href="{{ route('projects.roadmap', $project->id_project) }}"
+               class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">
+                ➕ Créer un sprint
+            </a>
+        @endif
     </div>
 
     <div class="flex space-x-4 overflow-x-auto">
@@ -58,14 +66,20 @@
                     @endif
                 </div>
 
-                <form action="{{ route('kanban.tasks.store', [$project->id_project, $sprint->id_sprint]) }}" method="POST" class="mt-2">
-                    @csrf
-                    <input type="hidden" name="status" value="{{ $statusKey }}">
-                    <input type="text" name="title" placeholder="Titre de la tâche" class="w-full border rounded p-1 text-sm mb-1" required>
-                    <button type="submit" class="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600 text-sm w-full">
-                        ➕ Ajouter
-                    </button>
-                </form>
+                @if($sprint)
+                    <form action="{{ route('kanban.tasks.store', [$project->id_project, $sprint->id_sprint]) }}" method="POST" class="mt-2">
+                        @csrf
+                        <input type="hidden" name="status" value="{{ $statusKey }}">
+                        <input type="text" name="title" placeholder="Titre de la tâche" class="w-full border rounded p-1 text-sm mb-1" required>
+                        <button type="submit" class="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600 text-sm w-full">
+                            ➕ Ajouter
+                        </button>
+                    </form>
+                @else
+                    <div class="mt-2 text-gray-500 text-sm italic">
+                        Aucun sprint actif pour ajouter des tâches.
+                    </div>
+                @endif
             </div>
         @endforeach
     </div>

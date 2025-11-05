@@ -78,14 +78,23 @@ class ProjectController extends Controller
     public function kanban(Project $project, Request $request)
 {
     $sprints = $project->sprints()->orderBy('start_date')->get();
+
     $sprintId = $request->query('sprint');
     $sprint = $sprintId ? $sprints->find($sprintId) : $sprints->first();
 
-    if (!$sprint) {
-        return redirect()->route('dashboard')->with('error', 'Aucun sprint trouvé pour ce projet.');
-    }
+    $tasks = collect();
 
-    $tasks = Task::where('sprint_id', $sprint->id_sprint)->get();
+    if ($sprint) {
+        // Tâches liées aux epics du sprint
+        $tasks = $sprint->epics()->with('tasks')->get()->flatMap(function ($epic) {
+            return $epic->tasks;
+        });
+
+        // Tâches non liées à un epic
+        $tasks = $tasks->merge(Task::where('sprint_id', $sprint->id_sprint)
+            ->whereNull('epic_id')
+            ->get());
+    }
 
     $tasksByStatus = [
         'todo' => $tasks->where('status', 'todo'),
@@ -95,6 +104,7 @@ class ProjectController extends Controller
 
     return view('kanban.show', compact('project', 'sprint', 'sprints', 'tasksByStatus'));
 }
+
 
 public function storeKanbanTask(Request $request, Project $project, $sprintId)
 {

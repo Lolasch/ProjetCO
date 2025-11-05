@@ -8,34 +8,38 @@ use Illuminate\Http\Request;
 
 class TaskController extends Controller
 {
-    public function edit(Task $task)
-    {
-        $epics = Epic::where('project_id', $task->epic->project_id ?? null)->get();
-        return view('tasks.edit', compact('task', 'epics'));
-    }
+    // ... tes autres méthodes restent inchangées
 
+    // 💾 Mise à jour d’une tâche (pour modal Kanban)
     public function update(Request $request, Task $task)
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            'status' => 'required|in:todo,in_progress,done',
+            'status' => 'nullable|in:todo,in_progress,done', // status reste optionnel ici
             'description' => 'nullable|string',
-            'epic_id' => 'nullable|exists:epics,id_epic',
+            'epic_id' => 'nullable|exists:epics,id_epic'
         ]);
 
         $task->update([
             'title' => $request->title,
             'description' => $request->description,
-            'status' => $request->status,
             'epic_id' => $request->epic_id ?: null,
+            'status' => $request->status ?? $task->status
         ]);
 
-        return redirect()->back()->with('success', 'Tâche mise à jour avec succès !');
+        // 🔁 Redirection vers la même page Kanban
+        $projectId = $task->sprint->project_id ?? $task->epic->project_id ?? null;
+        return redirect()->route('projects.kanban', $projectId)
+            ->with('success', 'Tâche mise à jour avec succès !');
     }
 
+    // ❌ Suppression d’une tâche
     public function destroy(Task $task)
     {
+        $projectId = $task->sprint->project_id ?? $task->epic->project_id ?? null;
         $task->delete();
-        return redirect()->back()->with('success', 'Tâche supprimée avec succès !');
+
+        return redirect()->route('projects.kanban', $projectId)
+            ->with('success', 'Tâche supprimée avec succès !');
     }
 }
