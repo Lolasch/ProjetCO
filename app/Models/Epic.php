@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Task;
+use App\Models\Project;
+use App\Models\Sprint;
 
 class Epic extends Model
 {

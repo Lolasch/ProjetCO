@@ -76,59 +76,51 @@ class ProjectController extends Controller
     // KANBAN
     // ==============================
     public function kanban(Project $project, Request $request)
-    {
-        $sprints = $project->sprints()->orderBy('start_date')->get();
+{
+    $sprints = $project->sprints()->orderBy('start_date')->get();
+    $sprintId = $request->query('sprint');
+    $sprint = $sprintId ? $sprints->find($sprintId) : $sprints->first();
 
-        $sprintId = $request->query('sprint');
-        $sprint = $sprintId ? $sprints->find($sprintId) : $sprints->first();
-
-        if (!$sprint) {
-            return redirect()->route('dashboard')->with('error', 'Aucun sprint trouvé pour ce projet.');
-        }
-
-        $tasks = $sprint->epics()->with('tasks')->get()->flatMap(function ($epic) {
-            return $epic->tasks;
-        });
-        $tasks = $tasks->merge(Task::where('sprint_id', $sprint->id_sprint)
-            ->whereNull('epic_id')
-            ->get());
-
-        $tasksByStatus = [
-            'todo' => $tasks->where('status', 'todo'),
-            'in_progress' => $tasks->where('status', 'in_progress'),
-            'done' => $tasks->where('status', 'done'),
-        ];
-
-        return view('kanban.show', compact('project', 'sprint', 'sprints', 'tasksByStatus'));
+    if (!$sprint) {
+        return redirect()->route('dashboard')->with('error', 'Aucun sprint trouvé pour ce projet.');
     }
 
-    public function storeKanbanTask(Request $request, Project $project, $sprintId)
-    {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'status' => 'required|in:todo,in_progress,done',
-        ]);
+    $tasks = Task::where('sprint_id', $sprint->id_sprint)->get();
 
-        Task::create([
-            'title' => $request->title,
-            'status' => $request->status,
-            'sprint_id' => $sprintId,
-        ]);
+    $tasksByStatus = [
+        'todo' => $tasks->where('status', 'todo'),
+        'in_progress' => $tasks->where('status', 'in_progress'),
+        'done' => $tasks->where('status', 'done'),
+    ];
 
-        return back()->with('success', 'Tâche ajoutée au Kanban !');
-    }
+    return view('kanban.show', compact('project', 'sprint', 'sprints', 'tasksByStatus'));
+}
 
-    // ============== AJOUT CRUCIAL : sauvegarde drag&drop AJAX
-    public function moveTask(Request $request, Task $task)
-    {
-        $request->validate([
-            'status' => 'required|in:todo,in_progress,done',
-        ]);
-        $task->status = $request->status;
-        $task->save();
+public function storeKanbanTask(Request $request, Project $project, $sprintId)
+{
+    $request->validate([
+        'title' => 'required|string|max:255',
+        'status' => 'required|in:todo,in_progress,done',
+    ]);
 
-        return response()->json(['success' => true]);
-    }
+    Task::create([
+        'title' => $request->title,
+        'status' => $request->status,
+        'sprint_id' => $sprintId,
+    ]);
+
+    return back()->with('success', 'Tâche ajoutée au Kanban !');
+}
+
+public function moveTask(Request $request, Task $task)
+{
+    $request->validate([
+        'status' => 'required|in:todo,in_progress,done',
+    ]);
+    $task->update(['status' => $request->status]);
+
+    return response()->json(['success' => true]);
+}
 
 public function reporting(Project $project)
 {

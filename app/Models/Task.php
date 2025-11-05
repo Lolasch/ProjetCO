@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Epic;
+use App\Models\Sprint;
+use App\Models\User;
 
 class Task extends Model
 {
@@ -13,6 +16,7 @@ class Task extends Model
     protected $primaryKey = 'id_task';
     protected $fillable = [
         'title',
+        'description',
         'status',
         'assigned_to',
         'due_date',
@@ -20,27 +24,21 @@ class Task extends Model
         'sprint_id',
     ];
 
-    // ===============================
-    // RELATIONS
-    // ===============================
-
-    // Une tâche appartient à un epic
+    // Relation avec Epic
     public function epic()
     {
         return $this->belongsTo(Epic::class, 'epic_id');
     }
 
-    // Une tâche peut appartenir à un sprint
+    // Relation avec Sprint
     public function sprint()
     {
         return $this->belongsTo(Sprint::class, 'sprint_id');
     }
 
-    // Une tâche peut être assignée à un utilisateur
+    // Relation avec l'utilisateur assigné
     public function assignee()
     {
         return $this->belongsTo(User::class, 'assigned_to');
     }
-
-    // On supprime complètement la relation avec KanbanList
 }
