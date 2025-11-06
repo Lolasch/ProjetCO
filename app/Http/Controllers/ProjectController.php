@@ -89,7 +89,13 @@ class ProjectController extends Controller
             'in_progress' => $tasksByStatus['in_progress']->count(),
             'done' => $tasksByStatus['done']->count(),
         ];
-        return view('kanban.show', compact('project', 'sprint', 'sprints', 'tasksByStatus', 'tasksCount'));
+        $associates = $project->members()->wherePivot('role', 'associate')->get();
+
+        // IMPORTANT : récupère le rôle du membre courant pour contrôle dans la vue
+        $currentMember = $project->members->firstWhere('id_user', auth()->id());
+        $currentRole = $currentMember ? $currentMember->pivot->role : null;
+
+        return view('kanban.show', compact('project', 'sprint', 'sprints', 'tasksByStatus', 'tasksCount', 'associates', 'currentRole'));
     }
 
     public function storeKanbanTask(Request $request, Project $project, $sprintId)
@@ -122,7 +128,7 @@ class ProjectController extends Controller
     {
         $request->validate([
             'user_id' => 'required|exists:users,id_user',
-            'role' => 'required|in:manager,employee,client',
+            'role' => 'required|in:manager,associate,client',
         ]);
         $project->members()->syncWithoutDetaching([
             $request->user_id => ['role' => $request->role],

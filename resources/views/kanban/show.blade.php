@@ -6,11 +6,10 @@
 
     <div class="mb-4">
         <a href="{{ route('dashboard') }}" class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-400">
-            ← Retour aux projets
+            Retour aux projets
         </a>
     </div>
 
-    <!-- Sélection du sprint ou bouton créer un sprint -->
     <div class="mb-6">
         @if($sprints->count() > 0)
             <form method="GET" action="{{ route('projects.kanban', $project->id_project) }}">
@@ -26,7 +25,7 @@
         @else
             <a href="{{ route('projects.roadmap', $project->id_project) }}"
                class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">
-                ➕ Créer un sprint
+               Créer un sprint
             </a>
         @endif
     </div>
@@ -41,14 +40,20 @@
                 <div class="flex flex-col space-y-2 min-h-[50px] kanban-column" data-status="{{ $statusKey }}">
                     @if(isset($tasksByStatus[$statusKey]))
                         @foreach($tasksByStatus[$statusKey] as $task)
+                            @php
+                                $isDraggable =
+                                    $currentRole === 'manager' ||
+                                    ($currentRole === 'associate' && auth()->user()->id_user == $task->assigned_to);
+                            @endphp
                             <div
                                 class="bg-white rounded p-2 shadow flex justify-between items-center kanban-task"
-                                draggable="true"
+                                @if($isDraggable) draggable="true" @endif
                                 data-id="{{ $task->id_task }}"
                                 data-title="{{ $task->title }}"
                                 data-description="{{ $task->description ?? '' }}"
                                 data-status="{{ $task->status }}"
                                 data-epic="{{ $task->epic_id ?? '' }}"
+                                data-assigned_to="{{ $task->assigned_to ?? '' }}"
                             >
                                 <div>
                                     <span>{{ $task->title }}</span>
@@ -61,23 +66,26 @@
                                 <button
                                     type="button"
                                     class="ml-2 px-2 py-1 bg-gray-200 text-blue-600 rounded hover:bg-blue-100 focus:outline-none"
-                                    onclick="openTaskModal(this); event.stopPropagation();"
+                                    onclick="openTaskModal(this, '{{ auth()->user()->id_user }}', '{{ $currentRole }}'); event.stopPropagation();"
                                     title="Visualiser / éditer"
                                 >Visualiser</button>
                             </div>
                         @endforeach
                     @endif
                 </div>
-
-                @if($sprint)
+                @if($sprint && $currentRole === 'manager')
                     <form action="{{ route('kanban.tasks.store', [$project->id_project, $sprint->id_sprint]) }}" method="POST" class="mt-2">
                         @csrf
                         <input type="hidden" name="status" value="{{ $statusKey }}">
                         <input type="text" name="title" placeholder="Titre de la tâche" class="w-full border rounded p-1 text-sm mb-1" required>
                         <button type="submit" class="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600 text-sm w-full">
-                            ➕ Ajouter
+                            Ajouter
                         </button>
                     </form>
+                @elseif($sprint)
+                    <div class="mt-2 text-gray-500 text-sm italic">
+                        <!-- Aucun formulaire d'ajout pour associé/client -->
+                    </div>
                 @else
                     <div class="mt-2 text-gray-500 text-sm italic">
                         Aucun sprint actif pour ajouter des tâches.
@@ -89,7 +97,7 @@
 </div>
 
 <!-- MODAL D'ÉDITION -->
-<div id="taskModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+<div id="taskModal" class="fixed inset-0 bg-transparent hidden items-center justify-center z-50">
     <div class="bg-white rounded-lg shadow-lg w-96 p-6 relative">
         <h2 class="text-xl font-bold mb-4">Modifier la tâche</h2>
         <form id="taskForm" method="POST">
@@ -114,12 +122,18 @@
                     @endif
                 </select>
             </div>
+            <div class="mb-3">
+                <label class="block text-sm font-medium" for="taskAssignee">Assigner à un associé :</label>
+                <select name="assigned_to" id="taskAssignee" class="border rounded w-full p-2">
+                    <option value="">-- Aucun --</option>
+                    @foreach($associates as $user)
+                        <option value="{{ $user->id_user }}">{{ $user->name }} ({{ $user->email }})</option>
+                    @endforeach
+                </select>
+            </div>
             <div class="flex justify-between mt-4">
                 <button type="button" onclick="closeTaskModal()" class="bg-gray-400 text-white px-3 py-1 rounded">Fermer</button>
-                <div class="flex gap-2">
-                    <button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">Enregistrer</button>
-                    <button type="button" id="deleteButton" class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">Supprimer</button>
-                </div>
+                <div id="actionButtons" class="flex gap-2"></div>
             </div>
         </form>
     </div>
@@ -130,14 +144,17 @@ let dragged = null;
 
 // Drag & Drop
 document.querySelectorAll('.kanban-task').forEach(task => {
-    task.addEventListener('dragstart', e => {
-        dragged = task;
-        setTimeout(() => (task.style.display = 'none'), 0);
-    });
-    task.addEventListener('dragend', e => {
-        dragged = null;
-        task.style.display = '';
-    });
+    // attention : drag que si data-draggable
+    if (task.hasAttribute('draggable') && task.getAttribute('draggable') === "true") {
+        task.addEventListener('dragstart', e => {
+            dragged = task;
+            setTimeout(() => (task.style.display = 'none'), 0);
+        });
+        task.addEventListener('dragend', e => {
+            dragged = null;
+            task.style.display = '';
+        });
+    }
 });
 
 document.querySelectorAll('.kanban-column').forEach(column => {
@@ -158,8 +175,7 @@ document.querySelectorAll('.kanban-column').forEach(column => {
     });
 });
 
-// Modal avec data-attributes
-function openTaskModal(button) {
+function openTaskModal(button, currentUserId, currentRole) {
     const taskDiv = button.closest('.kanban-task');
     const modal = document.getElementById('taskModal');
     modal.classList.remove('hidden');
@@ -168,11 +184,55 @@ function openTaskModal(button) {
     document.getElementById('taskTitle').value = taskDiv.dataset.title;
     document.getElementById('taskDescription').value = taskDiv.dataset.description;
     document.getElementById('taskEpic').value = taskDiv.dataset.epic || '';
+    document.getElementById('taskAssignee').value = taskDiv.dataset.assigned_to || '';
 
     const taskId = taskDiv.dataset.id;
     document.getElementById('taskForm').action = `/tasks/${taskId}`;
 
-    document.getElementById('deleteButton').onclick = () => deleteTask(taskId);
+    const assignedTo = taskDiv.dataset.assigned_to;
+    const actionButtons = document.getElementById('actionButtons');
+    actionButtons.innerHTML = '';
+
+    if (currentRole === 'manager') {
+        actionButtons.innerHTML = `
+            <button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">Enregistrer</button>
+            <button type="button" id="deleteButton" class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">Supprimer</button>
+        `;
+        setTimeout(() => {
+            const deleteBtn = document.getElementById('deleteButton');
+            if (deleteBtn) {
+                deleteBtn.onclick = () => deleteTask(taskId);
+            }
+        }, 50);
+        document.getElementById('taskTitle').disabled = false;
+        document.getElementById('taskDescription').disabled = false;
+        document.getElementById('taskEpic').disabled = false;
+        document.getElementById('taskAssignee').disabled = false;
+    } else if (
+        currentRole === 'associate' &&
+        String(currentUserId) === String(assignedTo)
+    ) {
+        actionButtons.innerHTML = `
+            <button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">Enregistrer</button>
+            <button type="button" id="deleteButton" class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">Supprimer</button>
+        `;
+        setTimeout(() => {
+            const deleteBtn = document.getElementById('deleteButton');
+            if (deleteBtn) {
+                deleteBtn.onclick = () => deleteTask(taskId);
+            }
+        }, 50);
+        document.getElementById('taskTitle').disabled = false;
+        document.getElementById('taskDescription').disabled = false;
+        document.getElementById('taskEpic').disabled = false;
+        document.getElementById('taskAssignee').disabled = true; // Associé ne peut pas changer l'assignation
+    } else {
+        actionButtons.innerHTML = '';
+        document.getElementById('taskTitle').disabled = true;
+        document.getElementById('taskDescription').disabled = true;
+        document.getElementById('taskEpic').disabled = true;
+        document.getElementById('taskAssignee').disabled = true;
+    }
 }
 
 function closeTaskModal() {

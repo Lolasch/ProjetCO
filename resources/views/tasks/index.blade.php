@@ -9,12 +9,12 @@
     <div class="flex justify-between mb-6">
         <a href="{{ route('tasks.create', $sprint->id_sprint) }}"
            class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-            ➕ Ajouter une tâche
+            Ajouter une tâche
         </a>
 
         <a href="{{ route('projects.roadmap', $sprint->project_id) }}"
            class="bg-gray-300 text-black px-4 py-2 rounded hover:bg-gray-400">
-            ⬅ Retour à la roadmap
+            Retour à la roadmap
         </a>
     </div>
 
@@ -33,19 +33,20 @@
                     </div>
 
                     <p class="text-gray-700 mb-1">{{ $task->description }}</p>
-                    <p class="text-sm text-gray-500">Epic : {{ $task->epic->name ?? 'Aucun' }}</p>
+                    <p class="text-sm text-gray-500">Epic : {{ $task->epic->name ?? 'Aucun' }}</p>
+                    <p class="text-sm text-gray-500">Associé : {{ $task->assignee->name ?? 'Non assigné' }}</p>
 
                     <div class="flex justify-between mt-2 text-sm">
                         <a href="{{ route('tasks.edit', $task->id_task) }}"
                            class="bg-yellow-400 text-white px-2 py-1 rounded hover:bg-yellow-500">
-                            ✏️ Modifier
+                            Modifier
                         </a>
 
                         <form action="{{ route('tasks.destroy', $task->id_task) }}" method="POST">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">
-                                ❌ Supprimer
+                                Supprimer
                             </button>
                         </form>
                     </div>

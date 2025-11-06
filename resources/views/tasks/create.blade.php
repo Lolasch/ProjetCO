@@ -1,34 +1,45 @@
 @extends('layouts.app')
 
 @section('content')
-<h1>Créer une tâche pour l'Epic : {{ $epic->name }}</h1>
+<div class="max-w-md mx-auto py-8">
+    <h1 class="text-2xl font-bold mb-4 text-center text-[#1c2352]">Créer une nouvelle tâche</h1>
+    <form action="{{ route('tasks.store', $epic->id_epic) }}" method="POST" class="space-y-4">
+        @csrf
 
-<form action="{{ route('tasks.store', $epic->id_epic) }}" method="POST">
-    @csrf
+        <div>
+            <label for="title" class="block font-bold mb-1">Titre :</label>
+            <input type="text" name="title" id="title" value="{{ old('title') }}" required
+                class="rounded px-2 py-1 border w-full">
+        </div>
 
-    <label>Titre de la tâche :</label><br>
-    <input type="text" name="title" value="{{ old('title') }}" required><br><br>
+        <div>
+            <label for="description" class="block font-bold mb-1">Description :</label>
+            <textarea name="description" id="description" rows="2"
+                class="rounded px-2 py-1 border w-full">{{ old('description') }}</textarea>
+        </div>
 
-    <label>Description :</label><br>
-    <textarea name="description">{{ old('description') }}</textarea><br><br>
+        <div>
+            <label for="status" class="block font-bold mb-1">Statut :</label>
+            <select name="status" id="status" class="rounded px-2 py-1 border w-full">
+                <option value="todo">À faire</option>
+                <option value="in_progress">En cours</option>
+                <option value="done">Terminée</option>
+            </select>
+        </div>
 
-    <label>Responsable :</label><br>
-    <input type="text" name="assigned_to" value="{{ old('assigned_to') }}"><br><br>
+        <div>
+            <label for="assigned_to" class="block font-bold mb-1">Assigner à un associé :</label>
+            <select name="assigned_to" id="assigned_to" class="rounded px-2 py-1 border w-full">
+                <option value="">-- Aucun --</option>
+                @foreach($associates as $user)
+                    <option value="{{ $user->id_user }}" @if(old('assigned_to') == $user->id_user) selected @endif>
+                        {{ $user->name }} ({{ $user->email }})
+                    </option>
+                @endforeach
+            </select>
+        </div>
 
-    <label>Date limite :</label><br>
-    <input type="date" name="due_date" value="{{ old('due_date') }}"><br><br>
-
-    <label>Statut :</label><br>
-    <select name="status">
-        <option value="todo" {{ old('status') == 'todo' ? 'selected' : '' }}>À faire</option>
-        <option value="in_progress" {{ old('status') == 'in_progress' ? 'selected' : '' }}>En cours</option>
-        <option value="done" {{ old('status') == 'done' ? 'selected' : '' }}>Terminé</option>
-    </select><br><br>
-
-    <button type="submit">Créer la tâche</button>
-</form>
-
-<a href="{{ route('projects.roadmap', $epic->project_id) }}" class="mt-4 inline-block text-blue-500 hover:underline">
-    ⬅ Retour à la roadmap
-</a>
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Créer la tâche</button>
+    </form>
+</div>
 @endsection
