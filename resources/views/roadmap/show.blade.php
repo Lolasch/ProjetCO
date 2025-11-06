@@ -5,23 +5,23 @@
 
     <h1 class="text-2xl font-bold mb-4">Roadmap : {{ $project->name }}</h1>
 
-    <!-- Bouton pour ajouter un sprint -->
-    <a href="{{ route('sprints.create', $project->id_project) }}"
-       class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded mb-4 inline-block">
-       + Ajouter un sprint
-    </a>
+    @if($currentRole === 'manager')
+        <!-- Ajout sprint et release seulement pour le chef -->
+        <a href="{{ route('sprints.create', $project->id_project) }}"
+           class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded mb-4 inline-block">
+           + Ajouter un sprint
+        </a>
 
-    <!-- Bouton pour ajouter une release -->
-    <a href="{{ route('releases.create', $project->id_project) }}"
-       class="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded mb-4 inline-block">
-       + Ajouter une release
-    </a>
+        <a href="{{ route('releases.create', $project->id_project) }}"
+           class="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded mb-4 inline-block">
+           + Ajouter une release
+        </a>
+    @endif
 
-    <!-- Calendrier des sprints et releases -->
     <div id="calendar" class="mt-6 border rounded-lg shadow p-4"></div>
 </div>
 
-<!-- Modale Epic (lecture seule des tâches) -->
+<!-- Modale Epic (lecture seule tâches, tout rôle) -->
 <div id="epicModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
     <div class="bg-white rounded-lg shadow-lg w-96 max-w-full p-4">
         <div class="flex justify-between items-center mb-4">
@@ -32,7 +32,7 @@
     </div>
 </div>
 
-<!-- Modale Release (infos + supprimer) -->
+<!-- Modale Release (suppression uniquement pour chef) -->
 <div id="releaseModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
     <div class="bg-white rounded-lg shadow-lg w-96 max-w-full p-4">
         <div class="flex justify-between items-center mb-4">
@@ -40,11 +40,13 @@
             <button onclick="closeReleaseModal()" class="text-gray-600 hover:text-gray-800">&times;</button>
         </div>
         <div id="releaseInfo" class="mb-4"></div>
+        @if($currentRole === 'manager')
         <form id="deleteReleaseForm" method="POST">
             @csrf
             @method('DELETE')
             <button type="submit" class="bg-red-500 px-3 py-1 rounded text-white hover:bg-red-600">Supprimer</button>
         </form>
+        @endif
     </div>
 </div>
 
@@ -61,13 +63,11 @@ function openEpicModal(epic) {
     document.getElementById('epicTitle').innerText = epic.title;
     const epicTasksDiv = document.getElementById('epicTasks');
     epicTasksDiv.innerHTML = '';
-
     epic.tasks.forEach(task => {
         let statusText = 'À faire';
         let statusColor = 'bg-gray-300 text-gray-800';
         if(task.status === 'in_progress') { statusText = 'En cours'; statusColor = 'bg-yellow-300 text-yellow-800'; }
         else if(task.status === 'done') { statusText = 'Terminé'; statusColor = 'bg-green-300 text-green-800'; }
-
         let taskEl = document.createElement('div');
         taskEl.classList.add('mb-2', 'p-2', 'border', 'rounded', 'flex', 'justify-between', 'items-center');
         taskEl.innerHTML = `
@@ -106,7 +106,6 @@ function closeReleaseModal() {
 
 document.addEventListener('DOMContentLoaded', function() {
     const calendarEl = document.getElementById('calendar');
-
     const calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
         height: 'auto',
@@ -171,6 +170,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Sprints avec epics
             if(!arg.event.extendedProps.isRelease){
+                @if($currentRole === 'manager')
                 let btnContainer = document.createElement('div');
                 btnContainer.classList.add('flex', 'justify-between', 'mt-1');
                 btnContainer.innerHTML = `
@@ -185,6 +185,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 `;
                 el.appendChild(btnContainer);
+                @endif
 
                 arg.event.extendedProps.epics.forEach(epic => {
                     let epicEl = document.createElement('div');
@@ -194,7 +195,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     el.appendChild(epicEl);
                 });
             } else {
-                // Releases
                 el.style.cursor = 'pointer';
                 el.onclick = () => openReleaseModal({
                     id: arg.event.id.split('-')[1],

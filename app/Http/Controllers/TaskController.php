@@ -8,14 +8,11 @@ use Illuminate\Http\Request;
 
 class TaskController extends Controller
 {
-    // -----------------------------
     // Création d’une tâche depuis roadmap (epic)
-    // -----------------------------
     public function create(Epic $epic)
     {
         $project = $epic->sprint->project;
         $associates = $project->members()->wherePivot('role', 'associate')->get();
-
         return view('tasks.create', compact('epic', 'associates'));
     }
 
@@ -39,9 +36,7 @@ class TaskController extends Controller
                          ->with('success', 'Tâche créée avec succès !');
     }
 
-    // -----------------------------
     // Édition d’une tâche (modal Kanban)
-    // -----------------------------
     public function edit(Task $task)
     {
         $project = $task->epic
@@ -54,7 +49,7 @@ class TaskController extends Controller
 
     public function update(Request $request, Task $task)
     {
-        $request->validate([
+        $data = $request->validate([
             'title' => 'required|string|max:255',
             'status' => 'nullable|in:todo,in_progress,done',
             'description' => 'nullable|string',
@@ -62,12 +57,23 @@ class TaskController extends Controller
             'assigned_to' => 'nullable|exists:users,id_user',
         ]);
 
+        // On protège l'assignation : seul le chef peut modifier assigned_to
+        $project = $task->epic
+            ? $task->epic->sprint->project
+            : ($task->sprint ? $task->sprint->project : null);
+        $userProject = $project ? $project->members->firstWhere('id_user', auth()->id()) : null;
+        $role = $userProject ? $userProject->pivot->role : null;
+
+        if($role !== 'manager'){
+            unset($data['assigned_to']);
+        }
+
         $task->update([
-            'title' => $request->title,
-            'description' => $request->description,
-            'epic_id' => $request->epic_id ?: null,
-            'status' => $request->status ?? $task->status,
-            'assigned_to' => $request->assigned_to,
+            'title' => $data['title'],
+            'description' => $data['description'] ?? null,
+            'epic_id' => $data['epic_id'] ?? null,
+            'status' => $data['status'] ?? $task->status,
+            'assigned_to' => $data['assigned_to'] ?? $task->assigned_to,
         ]);
 
         $projectId = $task->sprint->project_id ?? $task->epic->project_id ?? null;
@@ -75,9 +81,7 @@ class TaskController extends Controller
             ->with('success', 'Tâche mise à jour avec succès !');
     }
 
-    // -----------------------------
     // Suppression d’une tâche
-    // -----------------------------
     public function destroy(Task $task)
     {
         $projectId = $task->sprint->project_id ?? $task->epic->project_id ?? null;

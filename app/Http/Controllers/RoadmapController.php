@@ -16,7 +16,11 @@ class RoadmapController extends Controller
         // 🚀 Récupérer les releases liées à ce projet
         $releases = Release::where('project_id', $project->id_project)->get();
 
+        // ➕ Récupérer le rôle du membre courant dans ce projet
+        $currentMember = $project->members->firstWhere('id_user', auth()->id());
+        $currentRole = $currentMember ? $currentMember->pivot->role : null;
+
         // 🔁 Envoyer à la vue
-        return view('roadmap.show', compact('project', 'sprints', 'releases'));
+        return view('roadmap.show', compact('project', 'sprints', 'releases', 'currentRole'));
     }
 }
