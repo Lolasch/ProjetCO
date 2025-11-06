@@ -11,20 +11,40 @@
        + Ajouter un sprint
     </a>
 
-    <!-- Calendrier des sprints -->
+    <!-- Bouton pour ajouter une release -->
+    <a href="{{ route('releases.create', $project->id_project) }}"
+       class="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded mb-4 inline-block">
+       + Ajouter une release
+    </a>
+
+    <!-- Calendrier des sprints et releases -->
     <div id="calendar" class="mt-6 border rounded-lg shadow p-4"></div>
 </div>
 
-<!-- Modale Epic (tâches lecture seule) -->
+<!-- Modale Epic (lecture seule des tâches) -->
 <div id="epicModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
     <div class="bg-white rounded-lg shadow-lg w-96 max-w-full p-4">
         <div class="flex justify-between items-center mb-4">
             <h3 id="epicTitle" class="text-lg font-bold"></h3>
             <button onclick="closeEpicModal()" class="text-gray-600 hover:text-gray-800">&times;</button>
         </div>
-        <div id="epicTasks" class="mb-4">
-            <!-- Les tâches seront insérées ici en lecture seule -->
+        <div id="epicTasks" class="mb-4"></div>
+    </div>
+</div>
+
+<!-- Modale Release (infos + supprimer) -->
+<div id="releaseModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-lg w-96 max-w-full p-4">
+        <div class="flex justify-between items-center mb-4">
+            <h3 id="releaseTitle" class="text-lg font-bold"></h3>
+            <button onclick="closeReleaseModal()" class="text-gray-600 hover:text-gray-800">&times;</button>
         </div>
+        <div id="releaseInfo" class="mb-4"></div>
+        <form id="deleteReleaseForm" method="POST">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="bg-red-500 px-3 py-1 rounded text-white hover:bg-red-600">Supprimer</button>
+        </form>
     </div>
 </div>
 
@@ -66,6 +86,22 @@ function openEpicModal(epic) {
 function closeEpicModal() {
     document.getElementById('epicModal').classList.add('hidden');
     document.getElementById('epicModal').classList.remove('flex');
+}
+
+function openReleaseModal(release) {
+    document.getElementById('releaseTitle').innerText = release.title;
+    document.getElementById('releaseInfo').innerHTML = `
+        <p>Date de release : ${release.release_date}</p>
+        <p>Projet : {{ $project->name }}</p>
+    `;
+    document.getElementById('deleteReleaseForm').action = `/releases/${release.id}`;
+    document.getElementById('releaseModal').classList.remove('hidden');
+    document.getElementById('releaseModal').classList.add('flex');
+}
+
+function closeReleaseModal() {
+    document.getElementById('releaseModal').classList.add('hidden');
+    document.getElementById('releaseModal').classList.remove('flex');
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -114,40 +150,60 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             },
             @endforeach
+
+            @foreach($releases as $release)
+            {
+                id: 'release-{{ $release->id }}',
+                title: '{{ $release->name }}',
+                start: '{{ $release->release_date }}',
+                color: '{{ $release->color ?? "#f97316" }}',
+                extendedProps: { isRelease: true }
+            },
+            @endforeach
         ],
         eventContent: function(arg) {
-            let sprintEl = document.createElement('div');
-            sprintEl.classList.add('p-1');
+            let el = document.createElement('div');
+            el.classList.add('p-1');
 
             let titleEl = document.createElement('div');
             titleEl.innerHTML = `<strong>${arg.event.title}</strong>`;
-            sprintEl.appendChild(titleEl);
+            el.appendChild(titleEl);
 
-            let btnContainer = document.createElement('div');
-            btnContainer.classList.add('flex', 'justify-between', 'mt-1');
+            // Sprints avec epics
+            if(!arg.event.extendedProps.isRelease){
+                let btnContainer = document.createElement('div');
+                btnContainer.classList.add('flex', 'justify-between', 'mt-1');
+                btnContainer.innerHTML = `
+                    <a href="/sprints/${arg.event.id.split('-')[1]}/epics/create" class="text-sm bg-green-500 px-2 py-1 rounded text-white hover:bg-green-600">+ Epic</a>
+                    <div>
+                        <a href="/sprints/${arg.event.id.split('-')[1]}/edit" class="text-sm bg-yellow-500 px-2 py-1 rounded text-white hover:bg-yellow-600">Modifier</a>
+                        <form action="/sprints/${arg.event.id.split('-')[1]}" method="POST" style="display:inline;">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="text-sm bg-red-500 px-2 py-1 rounded text-white hover:bg-red-600">Supprimer</button>
+                        </form>
+                    </div>
+                `;
+                el.appendChild(btnContainer);
 
-            btnContainer.innerHTML = `
-                <a href="/sprints/${arg.event.id.split('-')[1]}/epics/create" class="text-sm bg-green-500 px-2 py-1 rounded text-white hover:bg-green-600">+ Epic</a>
-                <div>
-                    <a href="/sprints/${arg.event.id.split('-')[1]}/edit" class="text-sm bg-yellow-500 px-2 py-1 rounded text-white hover:bg-yellow-600">Modifier</a>
-                    <form action="/sprints/${arg.event.id.split('-')[1]}" method="POST" style="display:inline;">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="text-sm bg-red-500 px-2 py-1 rounded text-white hover:bg-red-600">Supprimer</button>
-                    </form>
-                </div>
-            `;
-            sprintEl.appendChild(btnContainer);
+                arg.event.extendedProps.epics.forEach(epic => {
+                    let epicEl = document.createElement('div');
+                    epicEl.classList.add('mt-1', 'px-2', 'py-2', 'bg-gray-700', 'text-white', 'rounded', 'text-sm', 'cursor-pointer', 'inline-block', 'mr-2', 'mb-2');
+                    epicEl.innerText = epic.title;
+                    epicEl.onclick = () => openEpicModal(epic);
+                    el.appendChild(epicEl);
+                });
+            } else {
+                // Releases
+                el.style.cursor = 'pointer';
+                el.onclick = () => openReleaseModal({
+                    id: arg.event.id.split('-')[1],
+                    title: arg.event.title,
+                    release_date: arg.event.start
+                });
+            }
 
-            arg.event.extendedProps.epics.forEach(epic => {
-                let epicEl = document.createElement('div');
-                epicEl.classList.add('mt-1', 'px-2', 'py-2', 'bg-gray-700', 'text-white', 'rounded', 'text-sm', 'cursor-pointer', 'inline-block', 'mr-2', 'mb-2');
-                epicEl.innerText = epic.title;
-                epicEl.onclick = () => openEpicModal(epic);
-                sprintEl.appendChild(epicEl);
-            });
-
-            return { domNodes: [sprintEl] };
+            return { domNodes: [el] };
         }
     });
 

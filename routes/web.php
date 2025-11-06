@@ -7,6 +7,7 @@ use App\Http\Controllers\SprintController;
 use App\Http\Controllers\EpicController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\RoadmapController;
+use App\Http\Controllers\ReleaseController;
 
 // --------------------
 // Authentification
@@ -31,7 +32,9 @@ Route::get('/dashboard', [ProjectController::class, 'dashboard'])
 Route::resource('projects', ProjectController::class)->middleware('auth');
 Route::get('/projects/{project}/reporting', [ProjectController::class, 'reporting'])->name('projects.reporting');
 
+// --------------------
 // Roadmap
+// --------------------
 Route::get('/projects/{project}/roadmap', [RoadmapController::class, 'show'])
     ->middleware('auth')
     ->name('projects.roadmap');
@@ -56,6 +59,15 @@ Route::middleware('auth')->group(function() {
     Route::get('/epics/{epic}/edit', [EpicController::class, 'edit'])->name('epics.edit');
     Route::put('/epics/{epic}', [EpicController::class, 'update'])->name('epics.update');
     Route::delete('/epics/{epic}', [EpicController::class, 'destroy'])->name('epics.destroy');
+});
+
+// --------------------
+// Releases (liés à un projet)
+// --------------------
+Route::middleware('auth')->group(function() {
+    Route::get('/projects/{project}/releases/create', [ReleaseController::class, 'create'])->name('releases.create');
+    Route::post('/projects/{project}/releases', [ReleaseController::class, 'store'])->name('releases.store');
+    Route::delete('/releases/{release}', [ReleaseController::class, 'destroy'])->name('releases.destroy');
 });
 
 // --------------------
