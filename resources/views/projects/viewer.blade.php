@@ -2,44 +2,42 @@
 
 @section('content')
 <div class="max-w-3xl mx-auto py-8">
-    <h1 class="text-2xl font-bold mb-6 text-center text-[#1c2352]">
+    <h1 class="text-3xl font-bold mb-8 text-center text-[#1c2352]">
         Vue externe du projet {{ $project->name }}
     </h1>
 
-    <div class="mb-10 flex flex-col md:flex-row md:justify-between gap-4">
-        <div class="bg-[#e4e3ef] rounded-2xl p-6 min-w-[220px]">
-            <div class="font-bold mb-2 text-[#26428b]">Statistiques des tâches :</div>
-            <ul class="space-y-1">
-                <li>À faire : {{ $count_todo }}</li>
-                <li>En cours : {{ $count_progress }}</li>
-                <li>Terminées : {{ $count_done }}</li>
-                <li class="font-bold">Total : {{ $count_total }}</li>
+    <!-- Statistiques & Membres -->
+    <div class="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-[#dde2f1] rounded-2xl p-6">
+            <div class="font-bold mb-2 text-[#23255f] text-xl">Statistiques des tâches :</div>
+            <ul class="space-y-1 text-[#23255f] text-base">
+                <li>À faire : <span class="font-semibold">{{ $count_todo }}</span></li>
+                <li>En cours : <span class="font-semibold">{{ $count_progress }}</span></li>
+                <li>Terminées : <span class="font-semibold">{{ $count_done }}</span></li>
+                <li class="font-bold mt-3">Total : {{ $count_total }}</li>
             </ul>
         </div>
-        <div class="bg-[#e4e3ef] rounded-2xl p-6 min-w-[220px]">
-            <div class="font-bold mb-2 text-[#26428b]">Membres du projet :</div>
-            <ul class="space-y-1">
+        <div class="bg-[#e5e4f7] rounded-2xl p-6">
+            <div class="font-bold mb-2 text-[#23255f] text-xl">Membres du projet :</div>
+            <ul class="flex flex-wrap gap-3">
             @foreach($members as $m)
-                <li>
-                    {{ $m->name }}
-                    <span class="text-xs px-2 py-1 rounded-2xl
-                        @if($m->pivot->role === 'manager') bg-[#4b68b7] text-white
-                        @elseif($m->pivot->role === 'associate') bg-[#5b6cb2] text-white
-                        @else bg-[#bfcbe1] text-[#153959]
-                        @endif
-                    ">
-                        {{ ucfirst($m->pivot->role) }}
-                    </span>
+                <li class="px-4 py-2 rounded-full font-semibold shadow
+                    @if($m->pivot->role === 'manager') bg-[#646db1] text-white
+                    @elseif($m->pivot->role === 'associate') bg-[#9099cd] text-white
+                    @else bg-[#cad3e9] text-[#23255f]
+                    @endif">
+                    {{ $m->name }} <span class="ml-2 text-sm">{{ ucfirst($m->pivot->role) }}</span>
                 </li>
             @endforeach
             </ul>
         </div>
     </div>
 
+    <!-- Graphe diagramme -->
     <div class="mb-12">
-        <h2 class="font-bold mb-3 text-[#1c2352]">Diagramme des statuts de tâches</h2>
+        <h2 class="font-bold mb-4 text-[#1c2352] text-xl">Diagramme des statuts de tâches</h2>
         <div class="flex justify-center">
-            <canvas id="kanbanPie" style="max-width:400px;max-height:300px"></canvas>
+            <canvas id="kanbanPie" style="max-width:340px;max-height:280px"></canvas>
         </div>
     </div>
 </div>
@@ -55,7 +53,7 @@ if(ctx) {
             datasets: [{
                 label: 'Statut des tâches',
                 data: [{{ $count_todo }}, {{ $count_progress }}, {{ $count_done }}],
-                backgroundColor: ['#fde047','#818cf8','#22c55e'],
+                backgroundColor: ['#9099cd','#646db1','#cad3e9'],
                 borderWidth: 2,
                 borderColor: '#fff'
             }]
@@ -65,9 +63,10 @@ if(ctx) {
             plugins: {
                 legend: {
                     display: true,
+                    position: 'bottom',
                     labels: {
                         color: '#1c2352',
-                        font: { size: 16 }
+                        font: { size: 13 }
                     }
                 }
             }

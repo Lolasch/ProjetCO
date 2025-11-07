@@ -97,3 +97,8 @@ Route::post('/projects/{project}/kanban/{sprint}/tasks', [ProjectController::cla
 // DRAG & DROP (update AJAX)
 Route::post('/kanban/tasks/{task}/move', [ProjectController::class, 'moveTask'])
     ->name('kanban.tasks.move');
+
+//Notifications
+Route::get('/notifications', function () { return view('notifications.index');})->name('notifications');
+
+
