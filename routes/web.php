@@ -9,6 +9,7 @@ use App\Http\Controllers\TaskController;
 use App\Http\Controllers\RoadmapController;
 use App\Http\Controllers\ReleaseController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ClientAccessController;
 
 
 // --------------------
@@ -33,6 +34,7 @@ Route::resource('projects', ProjectController::class)->middleware('auth');
 Route::get('/projects/{project}/reporting', [ProjectController::class, 'reporting'])->name('projects.reporting');
 Route::post('/projects/{project}/add-member', [ProjectController::class, 'addMember'])->name('projects.addMember');
 Route::get('/users/search', [UserController::class, 'searchByEmail'])->name('users.searchByEmail');
+Route::get('/share/{project}/{code}', [ProjectController::class, 'sharedView'])->name('projects.sharedView');
 
 // --------------------
 // Roadmap

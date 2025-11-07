@@ -159,4 +159,32 @@ class ProjectController extends Controller
             'project', 'tasks', 'count_todo', 'count_progress', 'count_done', 'count_total', 'members', 'user_candidates'
         ));
     }
+
+    public function sharedView(Project $project, $code)
+{
+    $expected = 'CLIENT-' . strtoupper(substr(hash('crc32', $project->id_project . 'SECRET_SALT'),0,8));
+    if ($code !== $expected) {
+        abort(404);
+    }
+    // Prépare toutes les données nécessaires pour la vue reporting readonly
+    $sprints = $project->sprints()->with('epics.tasks')->get();
+    $members = $project->members;
+    $tasks = collect();
+    foreach ($sprints as $sprint) {
+        foreach ($sprint->epics as $epic) {
+            $tasks = $tasks->merge($epic->tasks);
+        }
+        $tasks = $tasks->merge($sprint->tasks);
+    }
+    $count_todo = $tasks->where('status', 'todo')->count();
+    $count_progress = $tasks->where('status', 'in_progress')->count();
+    $count_done = $tasks->where('status', 'done')->count();
+    $count_total = $tasks->count();
+
+    return view('projects.viewer', compact(
+        'project', 'sprints', 'members',
+        'count_todo', 'count_progress', 'count_done', 'count_total'
+    ));
+}
+
 }
