@@ -44,9 +44,22 @@
                                 $isDraggable =
                                     $currentRole === 'manager' ||
                                     ($currentRole === 'associate' && auth()->user()->id_user == $task->assigned_to);
+                                $alerte = false;
+                                if($task->due_date){
+                                    $now = \Carbon\Carbon::today();
+                                    $due = \Carbon\Carbon::parse($task->due_date)->startOfDay();
+                                    $diff = $now->diffInDays($due, false);
+                                    if ($diff < 0) {
+                                        $alerte = ["Retard : échue depuis " . abs($diff) . " jour(s)", 'bg-red-100 text-red-800'];
+                                    } elseif ($diff == 0) {
+                                        $alerte = ["Dernier jour ! Échéance aujourd'hui", 'bg-orange-100 text-orange-800'];
+                                    } elseif ($diff <= 2) {
+                                        $alerte = ["Attention : échéance dans $diff jour(s)", 'bg-yellow-100 text-yellow-800'];
+                                    }
+                                }
                             @endphp
                             <div
-                                class="bg-white rounded p-2 shadow flex justify-between items-center kanban-task"
+                                class="bg-white rounded p-2 shadow flex flex-col kanban-task"
                                 @if($isDraggable) draggable="true" @endif
                                 data-id="{{ $task->id_task }}"
                                 data-title="{{ $task->title }}"
@@ -56,25 +69,30 @@
                                 data-assigned_to="{{ $task->assigned_to ?? '' }}"
                                 data-due_date="{{ $task->due_date }}"
                             >
-                                <div>
+                                <div class="flex justify-between items-center">
                                     <span>{{ $task->title }}</span>
                                     @if($task->epic)
                                         <span class="text-xs text-white bg-blue-500 rounded px-1 py-0.5 ml-2">
                                             Epic : {{ $task->epic->name }}
                                         </span>
                                     @endif
-                                    @if($task->due_date)
-                                        <span class="text-xs text-gray-700 ml-2">
-                                            Échéance : {{ \Carbon\Carbon::parse($task->due_date)->format('d/m/Y') }}
-                                        </span>
-                                    @endif
                                 </div>
-                                <button
-                                    type="button"
-                                    class="ml-2 px-2 py-1 bg-gray-200 text-blue-600 rounded hover:bg-blue-100 focus:outline-none"
-                                    onclick="openTaskModal(this, '{{ auth()->user()->id_user }}', '{{ $currentRole }}'); event.stopPropagation();"
-                                    title="Visualiser / éditer"
-                                >Visualiser</button>
+                                @if($task->due_date)
+                                    <span class="text-xs text-gray-700 ml-2">
+                                        Échéance : {{ \Carbon\Carbon::parse($task->due_date)->format('d/m/Y') }}
+                                    </span>
+                                @endif
+                                @if($alerte)
+                                    <span class="text-xs font-semibold px-2 py-1 mt-1 rounded {{ $alerte[1] }}">{{ $alerte[0] }}</span>
+                                @endif
+                                <div class="flex justify-end mt-2">
+                                    <button
+                                        type="button"
+                                        class="ml-2 px-2 py-1 bg-gray-200 text-blue-600 rounded hover:bg-blue-100 focus:outline-none"
+                                        onclick="openTaskModal(this, '{{ auth()->user()->id_user }}', '{{ $currentRole }}'); event.stopPropagation();"
+                                        title="Visualiser / éditer"
+                                    >Visualiser</button>
+                                </div>
                             </div>
                         @endforeach
                     @endif
@@ -101,7 +119,6 @@
         @endforeach
     </div>
 </div>
-
 
 <!-- MODAL D'ÉDITION -->
 <div id="taskModal" class="fixed inset-0 bg-transparent hidden items-center justify-center z-50">
