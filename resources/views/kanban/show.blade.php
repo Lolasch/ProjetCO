@@ -54,12 +54,18 @@
                                 data-status="{{ $task->status }}"
                                 data-epic="{{ $task->epic_id ?? '' }}"
                                 data-assigned_to="{{ $task->assigned_to ?? '' }}"
+                                data-due_date="{{ $task->due_date }}"
                             >
                                 <div>
                                     <span>{{ $task->title }}</span>
                                     @if($task->epic)
                                         <span class="text-xs text-white bg-blue-500 rounded px-1 py-0.5 ml-2">
                                             Epic : {{ $task->epic->name }}
+                                        </span>
+                                    @endif
+                                    @if($task->due_date)
+                                        <span class="text-xs text-gray-700 ml-2">
+                                            Échéance : {{ \Carbon\Carbon::parse($task->due_date)->format('d/m/Y') }}
                                         </span>
                                     @endif
                                 </div>
@@ -96,51 +102,60 @@
     </div>
 </div>
 
+
 <!-- MODAL D'ÉDITION -->
 <div id="taskModal" class="fixed inset-0 bg-transparent hidden items-center justify-center z-50">
     <div class="bg-white rounded-lg shadow-lg w-96 p-6 relative">
         <h2 class="text-xl font-bold mb-4">Modifier la tâche</h2>
-        <form id="taskForm" method="POST">
-            @csrf
-            @method('PUT')
-            <div class="mb-3">
-                <label class="block text-sm font-medium">Titre :</label>
-                <input type="text" name="title" id="taskTitle" class="border rounded w-full p-2" required>
-            </div>
-            <div class="mb-3">
-                <label class="block text-sm font-medium">Description :</label>
-                <textarea name="description" id="taskDescription" rows="3" class="border rounded w-full p-2"></textarea>
-            </div>
-            <div class="mb-3">
-                <label class="block text-sm font-medium">Associer à un Epic :</label>
-                <select name="epic_id" id="taskEpic" class="border rounded w-full p-2">
-                    <option value="">Aucun</option>
-                    @if(isset($sprint->epics))
-                        @foreach($sprint->epics as $epic)
-                            <option value="{{ $epic->id_epic }}">{{ $epic->name }}</option>
-                        @endforeach
-                    @endif
-                </select>
-            </div>
-            <div class="mb-3">
-                <label class="block text-sm font-medium" for="taskAssignee">Assigner à un associé :</label>
-                <select name="assigned_to" id="taskAssignee" class="border rounded w-full p-2">
-                    <option value="">-- Aucun --</option>
-                    @foreach($associates as $user)
-                        <option value="{{ $user->id_user }}">{{ $user->name }} ({{ $user->email }})</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="flex justify-between mt-4">
-                <button type="button" onclick="closeTaskModal()" class="bg-gray-400 text-white px-3 py-1 rounded">Fermer</button>
-                <div id="actionButtons" class="flex gap-2"></div>
-            </div>
-        </form>
+       <form id="taskForm" method="POST">
+    @csrf
+    @method('PUT')
+    <div class="mb-3">
+        <label class="block text-sm font-medium">Titre :</label>
+        <input type="text" name="title" id="taskTitle" class="border rounded w-full p-2" required>
+    </div>
+    <div class="mb-3">
+        <label class="block text-sm font-medium">Description :</label>
+        <textarea name="description" id="taskDescription" rows="3" class="border rounded w-full p-2"></textarea>
+    </div>
+    <div class="mb-3">
+        <label class="block text-sm font-medium">Associer à un Epic :</label>
+        <select name="epic_id" id="taskEpic" class="border rounded w-full p-2">
+            <option value="">Aucun</option>
+            @if(isset($sprint->epics))
+                @foreach($sprint->epics as $epic)
+                    <option value="{{ $epic->id_epic }}">{{ $epic->name }}</option>
+                @endforeach
+            @endif
+        </select>
+    </div>
+    <div class="mb-3">
+        <label class="block text-sm font-medium" for="taskAssignee">Assigner à un associé :</label>
+        <select name="assigned_to" id="taskAssignee" class="border rounded w-full p-2">
+            <option value="">-- Aucun --</option>
+            @foreach($associates as $user)
+                <option value="{{ $user->id_user }}">{{ $user->name }} ({{ $user->email }})</option>
+            @endforeach
+        </select>
+    </div>
+    <div class="mb-3">
+        <label class="block text-sm font-medium" for="taskDueDate">Date d'échéance :</label>
+        <input type="date" name="due_date" id="taskDueDate" class="border rounded w-full p-2" required>
+    </div>
+    <div class="flex justify-between mt-4">
+        <button type="button" onclick="closeTaskModal()" class="bg-gray-400 text-white px-3 py-1 rounded">Fermer</button>
+        <div id="actionButtons" class="flex gap-2"></div>
+    </div>
+</form>
+
+
     </div>
 </div>
 
+
 <script>
 let dragged = null;
+
 
 // Drag & Drop
 document.querySelectorAll('.kanban-task').forEach(task => {
@@ -156,6 +171,7 @@ document.querySelectorAll('.kanban-task').forEach(task => {
         });
     }
 });
+
 
 document.querySelectorAll('.kanban-column').forEach(column => {
     column.addEventListener('dragover', e => e.preventDefault());
@@ -175,23 +191,29 @@ document.querySelectorAll('.kanban-column').forEach(column => {
     });
 });
 
+
 function openTaskModal(button, currentUserId, currentRole) {
     const taskDiv = button.closest('.kanban-task');
     const modal = document.getElementById('taskModal');
     modal.classList.remove('hidden');
     modal.classList.add('flex');
 
+
     document.getElementById('taskTitle').value = taskDiv.dataset.title;
     document.getElementById('taskDescription').value = taskDiv.dataset.description;
     document.getElementById('taskEpic').value = taskDiv.dataset.epic || '';
     document.getElementById('taskAssignee').value = taskDiv.dataset.assigned_to || '';
+    document.getElementById('taskDueDate').value = taskDiv.dataset.due_date || '';
+
 
     const taskId = taskDiv.dataset.id;
     document.getElementById('taskForm').action = `/tasks/${taskId}`;
 
+
     const assignedTo = taskDiv.dataset.assigned_to;
     const actionButtons = document.getElementById('actionButtons');
     actionButtons.innerHTML = '';
+
 
     if (currentRole === 'manager') {
         actionButtons.innerHTML = `
@@ -225,7 +247,7 @@ function openTaskModal(button, currentUserId, currentRole) {
         document.getElementById('taskTitle').disabled = false;
         document.getElementById('taskDescription').disabled = false;
         document.getElementById('taskEpic').disabled = false;
-        document.getElementById('taskAssignee').disabled = true; // Associé ne peut pas changer l'assignation
+        document.getElementById('taskAssignee').disabled = true;
     } else {
         actionButtons.innerHTML = '';
         document.getElementById('taskTitle').disabled = true;
@@ -235,11 +257,13 @@ function openTaskModal(button, currentUserId, currentRole) {
     }
 }
 
+
 function closeTaskModal() {
     const modal = document.getElementById('taskModal');
     modal.classList.add('hidden');
     modal.classList.remove('flex');
 }
+
 
 function deleteTask(id) {
     if (confirm('Supprimer cette tâche ?')) {

@@ -41,6 +41,13 @@
             </select>
         </div>
 
+        <div>
+            <label for="due_date" class="block font-bold mb-1">Date d'échéance :</label>
+            <input type="date" name="due_date" id="due_date"
+                   value="{{ old('due_date', $task->due_date) }}"
+                   required class="rounded px-2 py-1 border w-full">
+        </div>
+
         <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Enregistrer</button>
     </form>
 </div>

@@ -26,22 +26,27 @@
                 <li class="border rounded-lg p-4 shadow hover:shadow-md transition">
                     <div class="flex justify-between items-center mb-2">
                         <strong class="text-lg">{{ $task->title }}</strong>
-                        <span class="text-sm px-2 py-1 rounded
-                            {{ $task->status == 'todo' ? 'bg-red-200 text-red-800' : ($task->status == 'in_progress' ? 'bg-yellow-200 text-yellow-800' : 'bg-green-200 text-green-800') }}">
-                            {{ ucfirst(str_replace('_', ' ', $task->status)) }}
+                        @php
+                            $isOverdue = $task->due_date && (now()->toDateString() > $task->due_date);
+                        @endphp
+                        <span class="text-xs font-semibold px-2 py-1 rounded
+                            {{ $isOverdue ? 'bg-red-500 text-white' : ($task->status == 'todo' ? 'bg-blue-100 text-blue-800' : ($task->status == 'in_progress' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800')) }}">
+                            {{ $isOverdue ? 'En retard' : ucfirst(str_replace('_', ' ', $task->status)) }}
                         </span>
                     </div>
 
                     <p class="text-gray-700 mb-1">{{ $task->description }}</p>
                     <p class="text-sm text-gray-500">Epic : {{ $task->epic->name ?? 'Aucun' }}</p>
                     <p class="text-sm text-gray-500">Associé : {{ $task->assignee->name ?? 'Non assigné' }}</p>
+                    <p class="text-sm text-gray-500">
+                        Échéance&nbsp;: {{ $task->due_date ? \Carbon\::parse($task->due_date)->format('d/m/Y') : 'Non définie' }}
+                    </p>
 
                     <div class="flex justify-between mt-2 text-sm">
                         <a href="{{ route('tasks.edit', $task->id_task) }}"
                            class="bg-yellow-400 text-white px-2 py-1 rounded hover:bg-yellow-500">
                             Modifier
                         </a>
-
                         <form action="{{ route('tasks.destroy', $task->id_task) }}" method="POST">
                             @csrf
                             @method('DELETE')
