@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Epic;
 use App\Models\Task;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 
 class TaskController extends Controller
@@ -29,6 +30,16 @@ class TaskController extends Controller
 
         return redirect()->route('projects.roadmap', $epic->sprint->project_id)
                          ->with('success', 'Tâche créée avec succès !');
+    }
+
+    public function edit(Task $task)
+    {
+        $project = $task->epic
+            ? $task->epic->sprint->project
+            : ($task->sprint ? $task->sprint->project : null);
+        $associates = $project ? $project->members()->wherePivot('role', 'associate')->get() : collect();
+
+        return view('tasks.edit', compact('task', 'associates'));
     }
 
     public function update(Request $request, Task $task)
@@ -58,6 +69,19 @@ class TaskController extends Controller
             'assigned_to' => $data['assigned_to'] ?? $task->assigned_to,
             'due_date' => $data['due_date'],
         ]);
+
+        if ($task->assigned_to && $task->assigned_to != auth()->id()) {
+            Notification::create([
+                'user_id' => $task->assigned_to,
+                'type' => 'update',
+                'task_id' => $task->id_task,
+                'project_id' => $project ? $project->id_project : null,
+                'title' => "La tâche '{$task->title}' a été mise à jour",
+                'body' => "Modification effectuée par " . auth()->user()->name,
+                'is_read' => false,
+            ]);
+        }
+
         $projectId = $task->sprint->project_id ?? $task->epic->project_id ?? null;
         return redirect()->route('projects.kanban', $projectId)
             ->with('success', 'Tâche mise à jour avec succès !');

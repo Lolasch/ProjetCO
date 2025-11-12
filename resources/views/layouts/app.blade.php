@@ -14,11 +14,23 @@
         <!-- Icônes notification + compte -->
         <div class="flex items-center space-x-8">
             <!-- Notification icon -->
-            <button class="focus:outline-none">
+            <a href="{{ route('notifications.index') }}" class="focus:outline-none relative">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="#f4f4f9" class="w-7 h-7">
                     <path d="M10 2a6 6 0 00-6 6v2.6c0 .486-.178.958-.504 1.317l-.438.452A1 1 0 004 15h12a1 1 0 00.942-1.369l-.438-.451A2.06 2.06 0 0116 10.6V8a6 6 0 00-6-6zm0 16a2 2 0 002-2H8a2 2 0 002 2z" />
                 </svg>
-            </button>
+                @auth
+                    @php
+                        $unreadCount = \App\Models\Notification::where('user_id', auth()->id())
+                            ->where('is_read', false)
+                            ->count();
+                    @endphp
+                    @if($unreadCount > 0)
+                        <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                            {{ $unreadCount }}
+                        </span>
+                    @endif
+                @endauth
+            </a>
             <!-- Profil avec dropdown -->
             <div x-data="{ open: false }" class="relative">
                 <button @click="open = !open" class="focus:outline-none">

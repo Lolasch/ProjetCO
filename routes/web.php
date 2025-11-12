@@ -10,7 +10,7 @@ use App\Http\Controllers\RoadmapController;
 use App\Http\Controllers\ReleaseController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ClientAccessController;
-
+use App\Http\Controllers\NotificationController;
 
 // --------------------
 // Authentification
@@ -99,6 +99,8 @@ Route::post('/kanban/tasks/{task}/move', [ProjectController::class, 'moveTask'])
     ->name('kanban.tasks.move');
 
 //Notifications
-Route::get('/notifications', function () { return view('notifications.index');})->name('notifications');
+
+Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
 
 
