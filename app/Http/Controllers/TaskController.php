@@ -6,6 +6,7 @@ use App\Models\Epic;
 use App\Models\Task;
 use App\Models\Notification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class TaskController extends Controller
 {
@@ -71,7 +72,7 @@ class TaskController extends Controller
         ]);
 
         if ($task->assigned_to && $task->assigned_to != auth()->id()) {
-            Notification::create([
+            $notif = Notification::create([
                 'user_id' => $task->assigned_to,
                 'type' => 'update',
                 'task_id' => $task->id_task,
@@ -80,6 +81,16 @@ class TaskController extends Controller
                 'body' => "Modification effectuée par " . auth()->user()->name,
                 'is_read' => false,
             ]);
+            $user = $task->assignee;
+            if($user && $user->email){
+                Mail::raw(
+                    $notif->title . "\n\n" . ($notif->body ?? ""),
+                    function($message) use ($user) {
+                        $message->to($user->email)
+                                ->subject('Notification ProjetCO');
+                    }
+                );
+            }
         }
 
         $projectId = $task->sprint->project_id ?? $task->epic->project_id ?? null;
