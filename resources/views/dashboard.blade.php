@@ -2,20 +2,14 @@
 
 @section('content')
 <div class="flex items-center justify-between mb-6">
-    <h1 class="text-4xl font-extrabold text-[#1c2352]">Mes projets</h1>
+    <h1 class="text-5xl font-black text-[#1c2352] mb-3">Mes projets</h1>
     <a href="{{ route('projects.create') }}"
-       class="bg-[#26428b] hover:bg-[#1c2352] text-white px-6 py-3 rounded-xl shadow transition text-lg font-bold flex items-center">
+       class="bg-[#26428b] hover:bg-[#1c2352] active:scale-95 active:shadow-inner text-white px-4 py-2 rounded-xl shadow-lg transition text-base font-bold flex items-center">
         Créer un projet
-        <svg class="w-6 h-6 ml-2" fill="none" stroke="#1c2352" stroke-width="2" viewBox="0 0 24 24">
+        <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
         </svg>
     </a>
-</div>
-
-<!-- Barre de recherche -->
-<div class="flex justify-center mb-10">
-    <input id="searchbar" type="text" placeholder="Filtrer par projet, rôle ou membre (chef, client, ...)"
-        class="rounded-lg border border-gray-300 px-6 py-2 text-lg focus:outline-none shadow w-full max-w-lg" />
 </div>
 
 @php
@@ -29,6 +23,16 @@
             $projectsAssoc[] = $project;
         }
     }
+    $roleColors = [
+        'manager'   => 'text-[#25028a]',
+        'associate' => 'text-[#028a8a]',
+        'client'    => 'text-[#8a0278]',
+    ];
+    $barColors = [
+        'manager'   => 'bg-[#25028a]',
+        'associate' => 'bg-[#028a8a]',
+        'client'    => 'bg-[#8a0278]',
+    ];
 @endphp
 
 <div class="mb-12">
@@ -38,24 +42,44 @@
     @else
         <div id="chef-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 px-2 mb-12">
         @foreach($projectsChef as $proj)
-            <div class="bg-[#e4e3ef] rounded-3xl shadow-lg px-10 py-7 flex flex-col items-center max-w-xl w-full mx-auto project-card"
-                data-title="{{ strtolower($proj->name) }}" data-role="chef de projet">
-                <h3 class="text-2xl font-bold mb-2 text-[#1c2352] text-center w-full truncate">{{ $proj->name }}</h3>
-                <div class="mb-3 flex items-center">
-                    <span class="text-[15px] font-bold px-5 py-2 rounded-2xl text-white bg-[#4b68b7] shadow">
-                        Chef de projet
-                    </span>
+            @php
+                $role = $proj->pivot->role;
+                $roleLabel = 'Chef de projet';
+                $roleKey = 'manager';
+
+                $sprints = $proj->sprints()->with(['epics.tasks', 'tasks'])->get();
+                $tasks = collect();
+                foreach ($sprints as $sprint) {
+                    foreach ($sprint->epics as $epic) {
+                        $tasks = $tasks->merge($epic->tasks);
+                    }
+                    $tasks = $tasks->merge($sprint->tasks);
+                }
+                $total = $tasks->count();
+                $done = $tasks->where('status', 'done')->count();
+                $progress = $total > 0 ? round($done * 100 / $total) : 0;
+            @endphp
+            <div class="bg-[#e2e9f8] rounded-3xl shadow-lg px-10 py-7 flex flex-col items-center max-w-xl w-full mx-auto project-card">
+                <h3 class="text-2xl font-black mb-0 text-[#1c2352] text-center w-full truncate">{{ $proj->name }}</h3>
+                <span class="block mt-2 mb-4 {{ $roleColors[$roleKey] ?? 'text-blue-400' }} font-bold text-base">{{ $roleLabel }}</span>
+                <div class="w-full h-2 bg-gray-200 rounded-full mb-2 mt-2">
+                    <div class="h-2 rounded-full {{ $barColors[$roleKey] ?? 'bg-[#96b6e1]' }}" style="width: {{ $progress }}%"></div>
                 </div>
+                <p class="text-xs {{ $roleColors[$roleKey] ?? 'text-blue-400' }} mb-2 text-right w-full">{{ $progress }}% accompli</p>
                 <div class="flex w-full space-x-4 mb-3 justify-center">
                     <a href="{{ route('projects.kanban', $proj->id_project) }}"
-                    class="flex-1 bg-[#5b6cb2] text-white py-3 rounded-xl hover:bg-[#43519e] text-base font-semibold text-center shadow-md">Kanban</a>
+                        class="flex-1 bg-[#7287c2] text-white py-3 rounded-xl shadow-lg hover:bg-[#43519e] active:scale-95 active:shadow-inner transition text-base font-semibold text-center">
+                        Kanban
+                    </a>
                     <a href="{{ route('projects.roadmap', $proj->id_project) }}"
-                    class="flex-1 bg-[#8ed2f6] text-[#153959] py-3 rounded-xl hover:bg-[#6bbfde] text-base font-semibold text-center shadow-md">Roadmap</a>
+                        class="flex-1 bg-[#a7dbf7] text-[#153959] py-3 rounded-xl shadow-lg hover:bg-[#6bbfde] active:scale-95 active:shadow-inner transition text-base font-semibold text-center">
+                        Roadmap
+                    </a>
                 </div>
                 <a href="{{ route('projects.reporting', $proj->id_project) }}"
-                class="w-2/4 mx-auto mt-1 bg-fuchsia-500 text-white py-3 rounded-xl hover:bg-fuchsia-700 text-base font-semibold text-center shadow-md block">
-                    Visualiser
-                </a>
+   class="mx-auto w-fit mt-1 bg-[#ffc8dd] text-white px-4 py-2 rounded-lg text-sm font-semibold text-center shadow-lg hover:bg-[#f1a9cc] active:scale-95 active:shadow-inner transition flex items-center gap-2 justify-center">
+    Vue d’ensemble
+</a>
             </div>
         @endforeach
         </div>
@@ -71,47 +95,50 @@
         @foreach($projectsAssoc as $proj)
             @php
                 $role = $proj->pivot->role;
-                $roleLabel = $role === 'employee' ? 'Collaborateur' : ($role === 'client' ? 'Client' : ucfirst($role));
-                $roleColor = $role === 'employee'
-                    ? 'bg-[#5b6cb2] text-white'
-                    : 'bg-[#bfcbe1] text-[#153959]';
+                $roleLabel =
+                    ($role === 'employee' || $role === 'associate') ? 'Collaborateur' :
+                    ($role === 'client' ? 'Client' : ucfirst($role));
+                $roleKey =
+                    ($role === 'employee' || $role === 'associate') ? 'associate' :
+                    ($role === 'client' ? 'client' : 'manager');
+
+                $sprints = $proj->sprints()->with(['epics.tasks', 'tasks'])->get();
+                $tasks = collect();
+                foreach ($sprints as $sprint) {
+                    foreach ($sprint->epics as $epic) {
+                        $tasks = $tasks->merge($epic->tasks);
+                    }
+                    $tasks = $tasks->merge($sprint->tasks);
+                }
+                $total = $tasks->count();
+                $done = $tasks->where('status', 'done')->count();
+                $progress = $total > 0 ? round($done * 100 / $total) : 0;
             @endphp
-            <div class="bg-[#e4e3ef] rounded-3xl shadow-lg px-10 py-7 flex flex-col items-center max-w-xl w-full mx-auto project-card"
-                data-title="{{ strtolower($proj->name) }}" data-role="{{ strtolower($roleLabel) }}">
-                <h3 class="text-2xl font-bold mb-2 text-[#1c2352] text-center w-full truncate">{{ $proj->name }}</h3>
-                <div class="mb-3 flex items-center">
-                    <span class="text-[15px] font-bold px-5 py-2 rounded-2xl {{ $roleColor }} shadow">
-                        {{ $roleLabel }}
-                    </span>
+            <div class="bg-[#e2e9f8] rounded-3xl shadow-lg px-10 py-7 flex flex-col items-center max-w-xl w-full mx-auto project-card">
+                <h3 class="text-2xl font-black mb-0 text-[#1c2352] text-center w-full truncate">{{ $proj->name }}</h3>
+                <span class="block mt-2 mb-4 {{ $roleColors[$roleKey] ?? 'text-blue-400' }} font-bold text-base">{{ $roleLabel }}</span>
+                <div class="w-full h-2 bg-gray-200 rounded-full mb-2 mt-2">
+                    <div class="h-2 rounded-full {{ $barColors[$roleKey] ?? 'bg-[#96b6e1]' }}" style="width: {{ $progress }}%"></div>
                 </div>
+                <p class="text-xs {{ $roleColors[$roleKey] ?? 'text-blue-400' }} mb-2 text-right w-full">{{ $progress }}% accompli</p>
                 <div class="flex w-full space-x-4 mb-3 justify-center">
                     <a href="{{ route('projects.kanban', $proj->id_project) }}"
-                    class="flex-1 bg-[#5b6cb2] text-white py-3 rounded-xl hover:bg-[#43519e] text-base font-semibold text-center shadow-md">Kanban</a>
+                        class="flex-1 bg-[#7287c2] text-white py-3 rounded-xl shadow-lg hover:bg-[#43519e] active:scale-95 active:shadow-inner transition text-base font-semibold text-center">
+                        Kanban
+                    </a>
                     <a href="{{ route('projects.roadmap', $proj->id_project) }}"
-                    class="flex-1 bg-[#8ed2f6] text-[#153959] py-3 rounded-xl hover:bg-[#6bbfde] text-base font-semibold text-center shadow-md">Roadmap</a>
+                        class="flex-1 bg-[#a7dbf7] text-[#153959] py-3 rounded-xl shadow-lg hover:bg-[#6bbfde] active:scale-95 active:shadow-inner transition text-base font-semibold text-center">
+                        Roadmap
+                    </a>
                 </div>
-                <a href="{{ route('projects.reporting', $proj->id_project) }}"
-                class="w-2/4 mx-auto mt-1 bg-fuchsia-500 text-white py-3 rounded-xl hover:bg-fuchsia-700 text-base font-semibold text-center shadow-md block">
-                    Visualiser
-                </a>
+            <a href="{{ route('projects.reporting', $proj->id_project) }}"
+   class="mx-auto w-fit mt-1 bg-[#ffc8dd] text-white px-4 py-2 rounded-lg text-sm font-semibold text-center shadow-lg hover:bg-[#f1a9cc] active:scale-95 active:shadow-inner transition flex items-center gap-2 justify-center">
+    Vue d’ensemble
+</a>
+
             </div>
         @endforeach
         </div>
     @endif
 </div>
-
-<script>
-document.getElementById('searchbar').addEventListener('input', function(e) {
-    const q = e.target.value.toLowerCase();
-    document.querySelectorAll('.project-card').forEach(card => {
-        const title = card.dataset.title;
-        const role = card.dataset.role;
-        if(title.includes(q) || role.includes(q) || q === '') {
-            card.style.display = '';
-        } else {
-            card.style.display = 'none';
-        }
-    });
-});
-</script>
 @endsection

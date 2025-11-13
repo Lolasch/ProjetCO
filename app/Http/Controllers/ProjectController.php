@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\Sprint;
+use App\Models\Epic;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -17,7 +18,22 @@ class ProjectController extends Controller
     public function dashboard()
     {
         $user = Auth::user();
-        $projects = $user->projects;
+        $projects = $user->projects; // Assoc, manager, client
+
+        // Calcule la progression :
+        foreach ($projects as $project) {
+            $sprints = $project->sprints()->with(['epics.tasks', 'tasks'])->get();
+            $tasks = collect();
+            foreach ($sprints as $sprint) {
+                foreach ($sprint->epics as $epic) {
+                    $tasks = $tasks->merge($epic->tasks);
+                }
+                $tasks = $tasks->merge($sprint->tasks);
+            }
+            $total = $tasks->count();
+            $done = $tasks->where('status', 'done')->count();
+            $project->progress = $total > 0 ? round($done * 100 / $total) : 0;
+        }
         return view('dashboard', compact('projects'));
     }
 
