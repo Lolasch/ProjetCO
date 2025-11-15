@@ -3,6 +3,7 @@
 @section('content')
 <div class="bg-black min-h-screen flex flex-col items-center py-10 w-full">
 
+    {{-- HEADER RETOUR + SPRINT SELECT --}}
     <div class="w-full max-w-[1400px] flex flex-row justify-between items-center mb-8">
         <a href="{{ route('dashboard') }}"
            class="flex items-center bg-[#5b6cb2] text-white font-bold px-6 py-2 rounded-full text-base shadow">
@@ -14,6 +15,7 @@
 
         <div class="flex items-center bg-[#5b6cb2] px-6 py-2 rounded-full">
             <span class="text-white font-bold text-lg mr-4">{{ $sprint ? $sprint->name : 'Aucun' }}</span>
+
             @if($sprints->count() > 0)
                 <form method="GET" action="{{ route('projects.kanban', $project->id_project) }}" class="ml-2">
                     <div class="relative w-fit max-w-[220px]">
@@ -21,13 +23,12 @@
                                 onchange="this.form.submit()"
                                 class="bg-[#e3e6f3] border-0 py-1 px-4 pr-10 rounded-full text-black font-semibold text-sm w-fit max-w-[220px] appearance-none"
                                 style="min-width: 0;">
-                            <option value="" disabled selected hidden>Visualiser un autre sprint</option>
+                            <option value="" disabled @unless($sprint) selected @endunless hidden>Visualiser un autre sprint</option>
                             @foreach($sprints as $s)
-                                @if(!$sprint || $s->id_sprint != $sprint->id_sprint)
-                                    <option value="{{ $s->id_sprint }}">
-                                        {{ $s->name }} ({{ $s->start_date }} → {{ $s->end_date }})
-                                    </option>
-                                @endif
+                                <option value="{{ $s->id_sprint }}"
+                                    @if($sprint && $s->id_sprint == $sprint->id_sprint) selected @endif>
+                                    {{ $s->name }} ({{ $s->start_date }} → {{ $s->end_date }})
+                                </option>
                             @endforeach
                         </select>
                         <svg class="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[#39256b]"
@@ -40,6 +41,7 @@
         </div>
     </div>
 
+    {{-- COLONNES KANBAN --}}
     <main class="w-full max-w-[1400px] flex flex-col lg:flex-row space-y-8 lg:space-y-0 lg:space-x-8 justify-center items-start">
         @foreach(['todo' => 'À faire', 'in_progress' => 'En cours', 'done' => 'Terminé'] as $statusKey => $statusLabel)
             <section class="bg-[#19181b] rounded-xl scrollbar-noir px-5 py-8 w-full max-w-[400px] shadow-xl flex flex-col" style="height: 80vh;">
@@ -58,6 +60,7 @@
                             $isDraggable =
                                 $currentRole === 'manager' ||
                                 ($currentRole === 'associate' && auth()->user()->id_user == $task->assigned_to);
+
                             $alerte = false;
                             $alerte_color = '';
                             if($task->due_date){
@@ -98,7 +101,9 @@
                                     </span>
                                 @endif
                             </div>
-                            <span class="text-xs text-[#bac8df] mb-1">Échéance : {{ \Carbon\Carbon::parse($task->due_date)->format('d/m/Y') }}</span>
+                            <span class="text-xs text-[#bac8df] mb-1">
+                                Échéance : {{ \Carbon\Carbon::parse($task->due_date)->format('d/m/Y') }}
+                            </span>
                             @if($alerte)
                                 <div class="flex items-center justify-start mt-3">
                                     <span class="inline-flex items-center px-3 py-1 {{ $alerte_color }} text-xs font-semibold rounded-lg">
@@ -128,95 +133,96 @@
         @endforeach
     </main>
 
-<!-- POP UP -->
-<div id="taskModal"
-     class="fixed inset-0 flex items-center justify-center z-50 backdrop-blur-md bg-transparent transition-all duration-200 hidden">
-  <div class="bg-[#19181b] rounded-xl shadow-2xl w-[480px] max-w-[95vw] min-h-[320px] max-h-[80vh]
-              p-8 relative border border-[#24202a] flex flex-col">
-    <h2 class="text-xl font-bold mb-4 text-white">Modifier la tâche</h2>
+    {{-- POPUP MODIFICATION TÂCHE --}}
+    <div id="taskModal"
+         class="fixed inset-0 flex items-center justify-center z-50 backdrop-blur-md bg-transparent transition-all duration-200 hidden">
+      <div class="bg-[#19181b] rounded-xl shadow-2xl w-[480px] max-w-[95vw] min-h-[320px] max-h-[80vh]
+                  p-8 relative border border-[#24202a] flex flex-col">
+        <h2 class="text-xl font-bold mb-4 text-white">Modifier la tâche</h2>
 
-    <form id="taskForm" method="POST" class="flex flex-col gap-4 flex-1 overflow-y-auto pr-1 scrollbar-noir">
-      @csrf
-      @method('PUT')
+        <form id="taskForm" method="POST" class="flex flex-col gap-4 flex-1 overflow-y-auto pr-1 scrollbar-noir">
+          @csrf
+          @method('PUT')
 
-      <div>
-        <label class="block text-sm font-semibold text-[#ba78e8] mb-1">Titre :</label>
-        <input type="text" name="title" id="taskTitle"
-               class="border border-[#4b4155] rounded-lg w-full p-2 bg-[#1b1a20] text-white
-                      focus:border-[#9066ad] focus:ring-1 focus:ring-[#9066ad] outline-none"
-               required>
-      </div>
-      <div>
-        <label class="block text-sm font-semibold text-[#ba78e8] mb-1">Description :</label>
-        <textarea name="description" id="taskDescription" rows="2"
-                  class="border border-[#4b4155] rounded-lg w-full p-2 bg-[#1b1a20] text-white
-                         focus:border-[#9066ad] focus:ring-1 focus:ring-[#9066ad] outline-none"></textarea>
-      </div>
-      <div>
-        <label class="block text-sm font-semibold text-[#ba78e8] mb-1">Associer à un Epic :</label>
-        <select name="epic_id" id="taskEpic"
-                class="border border-[#4b4155] rounded-lg w-full p-2 bg-[#24202a] text-white font-medium">
-          <option value="">Aucun</option>
-          @if(isset($sprint->epics))
-            @foreach($sprint->epics as $epic)
-              <option value="{{ $epic->id_epic }}">{{ $epic->name }}</option>
-            @endforeach
-          @endif
-        </select>
-      </div>
-      <div>
-        <label class="block text-sm font-semibold text-[#ba78e8] mb-1">Assigner à un associé :</label>
-        <select name="assigned_to" id="taskAssignee"
-                class="border border-[#4b4155] rounded-lg w-full p-2 bg-[#24202a] text-white font-medium">
-          <option value="">-- Aucun --</option>
-          @foreach($associates as $user)
-            <option value="{{ $user->id_user }}">{{ $user->name }} ({{ $user->email }})</option>
-          @endforeach
-        </select>
-      </div>
-      <div>
-        <label class="block text-sm font-semibold text-[#ba78e8] mb-1">Date d'échéance :</label>
-        <input type="date" name="due_date" id="taskDueDate"
-               class="border border-[#4b4155] rounded-lg w-full p-2 bg-[#1b1a20] text-white
-                      focus:border-[#8fc8b2] focus:ring-1 focus:ring-[#8fc8b2] outline-none"
-               required>
-      </div>
-    </form>
+          <div>
+            <label class="block text-sm font-semibold text-[#ba78e8] mb-1">Titre :</label>
+            <input type="text" name="title" id="taskTitle"
+                   class="border border-[#4b4155] rounded-lg w-full p-2 bg-[#1b1a20] text-white
+                          focus:border-[#9066ad] focus:ring-1 focus:ring-[#9066ad] outline-none"
+                   required>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-[#ba78e8] mb-1">Description :</label>
+            <textarea name="description" id="taskDescription" rows="2"
+                      class="border border-[#4b4155] rounded-lg w-full p-2 bg-[#1b1a20] text-white
+                             focus:border-[#9066ad] focus:ring-1 focus:ring-[#9066ad] outline-none"></textarea>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-[#ba78e8] mb-1">Associer à un Epic :</label>
+            <select name="epic_id" id="taskEpic"
+                    class="border border-[#4b4155] rounded-lg w-full p-2 bg-[#24202a] text-white font-medium">
+              <option value="">Aucun</option>
+              @if(isset($sprint->epics))
+                @foreach($sprint->epics as $epic)
+                  <option value="{{ $epic->id_epic }}">{{ $epic->name }}</option>
+                @endforeach
+              @endif
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-[#ba78e8] mb-1">Assigner à un associé :</label>
+            <select name="assigned_to" id="taskAssignee"
+                    class="border border-[#4b4155] rounded-lg w-full p-2 bg-[#24202a] text-white font-medium">
+              <option value="">-- Aucun --</option>
+              @foreach($associates as $user)
+                <option value="{{ $user->id_user }}">{{ $user->name }} ({{ $user->email }})</option>
+              @endforeach
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-[#ba78e8] mb-1">Date d'échéance :</label>
+            <input type="date" name="due_date" id="taskDueDate"
+                   class="border border-[#4b4155] rounded-lg w-full p-2 bg-[#1b1a20] text-white
+                          focus:border-[#8fc8b2] focus:ring-1 focus:ring-[#8fc8b2] outline-none"
+                   required>
+          </div>
+        </form>
 
-    <div class="flex flex-wrap justify-between mt-4 gap-2">
-      <button type="button"
-              onclick="closeTaskModal()"
-              class="bg-[#ba78e8] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#9066ad] transition">
-        Fermer
-      </button>
+        <div class="flex flex-wrap justify-between mt-4 gap-2">
+          <button type="button"
+                  onclick="closeTaskModal()"
+                  class="bg-[#ba78e8] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#9066ad] transition">
+            Fermer
+          </button>
 
-      <!-- Enregistrer : caché par défaut, affiché par JS si autorisé -->
-      <button type="submit" form="taskForm" id="saveButton"
-              class="bg-[#8fc8b2] text-[#19181b] px-4 py-2 rounded-lg font-medium hover:bg-[#4e9893] transition hidden">
-        Enregistrer
-      </button>
+          {{-- Enregistrer : caché par défaut, affiché par JS si autorisé --}}
+          <button type="submit" form="taskForm" id="saveButton"
+                  class="bg-[#8fc8b2] text-[#19181b] px-4 py-2 rounded-lg font-medium hover:bg-[#4e9893] transition hidden">
+            Enregistrer
+          </button>
 
-      <!-- Supprimer : caché par défaut aussi -->
-      <button type="button" id="deleteButton"
-              class="bg-[#e38b99] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#c1546b] transition hidden">
-        Supprimer
-      </button>
+          {{-- Supprimer : caché par défaut aussi --}}
+          <button type="button" id="deleteButton"
+                  class="bg-[#e38b99] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#c1546b] transition hidden">
+            Supprimer
+          </button>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
-    <!-- FORMULAIRE CACHÉ POUR LA SUPPRESSION -->
+    {{-- FORMULAIRE CACHÉ POUR LA SUPPRESSION --}}
     <form id="deleteTaskForm" method="POST" style="display:none;">
         @csrf
         @method('DELETE')
     </form>
 </div>
 
-<!-- Script drag&drop + modal -->
+{{-- SCRIPT DRAG & DROP + MODAL --}}
 <script>
     let dragged = null;
     window.dragged = false;
 
+    // Drag & drop seulement si draggables (manager ou associé propriétaire)
     document.querySelectorAll('.kanban-task').forEach(task => {
         if (task.hasAttribute('draggable') && task.getAttribute('draggable') === "true") {
             task.addEventListener('dragstart', e => {
@@ -239,6 +245,7 @@
             if (!dragged) return;
             this.insertBefore(dragged, this.firstChild);
 
+            // Mise à jour des compteurs
             setTimeout(() => {
                 document.querySelectorAll('.kanban-column').forEach(col => {
                     const colStatus = col.getAttribute('data-status');
@@ -265,92 +272,89 @@
         });
     });
 
-function openTaskModal(taskDiv, currentUserId, currentRole) {
-    if (window.dragged) return;
+    function openTaskModal(taskDiv, currentUserId, currentRole) {
+        if (window.dragged) return;
 
-    const modal    = document.getElementById('taskModal');
-    const form     = document.getElementById('taskForm');
-    const title    = document.getElementById('taskTitle');
-    const desc     = document.getElementById('taskDescription');
-    const epic     = document.getElementById('taskEpic');
-    const assignee = document.getElementById('taskAssignee');
-    const dueDate  = document.getElementById('taskDueDate');
-    const saveBtn  = document.getElementById('saveButton');
-    const deleteBtn= document.getElementById('deleteButton');
+        const modal    = document.getElementById('taskModal');
+        const form     = document.getElementById('taskForm');
+        const title    = document.getElementById('taskTitle');
+        const desc     = document.getElementById('taskDescription');
+        const epic     = document.getElementById('taskEpic');
+        const assignee = document.getElementById('taskAssignee');
+        const dueDate  = document.getElementById('taskDueDate');
+        const saveBtn  = document.getElementById('saveButton');
+        const deleteBtn= document.getElementById('deleteButton');
 
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
 
-    // Remplir les champs
-    title.value    = taskDiv.dataset.title;
-    desc.value     = taskDiv.dataset.description;
-    epic.value     = taskDiv.dataset.epic || '';
-    assignee.value = taskDiv.dataset.assigned_to || '';
-    dueDate.value  = taskDiv.dataset.due_date || '';
+        // Remplir les champs
+        title.value    = taskDiv.dataset.title;
+        desc.value     = taskDiv.dataset.description;
+        epic.value     = taskDiv.dataset.epic || '';
+        assignee.value = taskDiv.dataset.assigned_to || '';
+        dueDate.value  = taskDiv.dataset.due_date || '';
 
-    const taskId     = taskDiv.dataset.id;
-    const assignedTo = taskDiv.dataset.assigned_to;
-    form.action      = `/tasks/${taskId}`;
+        const taskId     = taskDiv.dataset.id;
+        const assignedTo = taskDiv.dataset.assigned_to;
+        form.action      = `/tasks/${taskId}`;
 
-    // État par défaut : lecture seule + boutons cachés
-    title.disabled    = true;
-    desc.disabled     = true;
-    epic.disabled     = true;
-    assignee.disabled = true;
-    dueDate.disabled  = true;
+        // Par défaut : lecture seule + boutons cachés
+        title.disabled    = true;
+        desc.disabled     = true;
+        epic.disabled     = true;
+        assignee.disabled = true;
+        dueDate.disabled  = true;
 
-    saveBtn.classList.add('hidden');
-    saveBtn.disabled = true;
+        saveBtn.classList.add('hidden');
+        saveBtn.disabled = true;
 
-    deleteBtn.classList.add('hidden');
-    deleteBtn.onclick = null;
+        deleteBtn.classList.add('hidden');
+        deleteBtn.onclick = null;
 
-    // MANAGER : tout voir / modifier / enregistrer / supprimer
-    if (currentRole === 'manager') {
-        title.disabled    = false;
-        desc.disabled     = false;
-        epic.disabled     = false;
-        assignee.disabled = false;
-        dueDate.disabled  = false;
+        // MANAGER : tout accès
+        if (currentRole === 'manager') {
+            title.disabled    = false;
+            desc.disabled     = false;
+            epic.disabled     = false;
+            assignee.disabled = false;
+            dueDate.disabled  = false;
 
-        saveBtn.classList.remove('hidden');
-        saveBtn.disabled = false;
+            saveBtn.classList.remove('hidden');
+            saveBtn.disabled = false;
 
-        deleteBtn.classList.remove('hidden');
-        deleteBtn.onclick = () => deleteTask(taskId);
+            deleteBtn.classList.remove('hidden');
+            deleteBtn.onclick = () => deleteTask(taskId);
+        }
+        // ASSOCIÉ propriétaire : peut modifier SA tâche + supprimer
+        else if (currentRole === 'associate' && String(currentUserId) === String(assignedTo)) {
+            title.disabled    = false;
+            desc.disabled     = false;
+            epic.disabled     = false;
+            assignee.disabled = true;  // ne change pas d'assignation
+            dueDate.disabled  = false;
+
+            saveBtn.classList.remove('hidden');
+            saveBtn.disabled = false;
+
+            deleteBtn.classList.remove('hidden');
+            deleteBtn.onclick = () => deleteTask(taskId);
+        }
+        // CLIENT ou associé sur tâche d'un autre : lecture seule, aucun bouton
     }
 
-    // ASSOCIÉ propriétaire de la tâche : peut enregistrer + supprimer
-    else if (currentRole === 'associate' && String(currentUserId) === String(assignedTo)) {
-        title.disabled    = false;
-        desc.disabled     = false;
-        epic.disabled     = false;
-        assignee.disabled = true;   // ne change pas l’assignation
-        dueDate.disabled  = false;
-
-        saveBtn.classList.remove('hidden');
-        saveBtn.disabled = false;
-
-        deleteBtn.classList.remove('hidden');
-        deleteBtn.onclick = () => deleteTask(taskId);
+    function closeTaskModal() {
+        const modal = document.getElementById('taskModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
     }
 
-    // ASSOCIÉ non propriétaire ou CLIENT :
-    // lecture seule, pas de bouton Enregistrer, pas de Supprimer (on laisse l’état par défaut)
-}
-
-function closeTaskModal() {
-    const modal = document.getElementById('taskModal');
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
-}
-
-function deleteTask(id) {
-    if (confirm('Supprimer cette tâche ?')) {
-        const form = document.getElementById('deleteTaskForm');
-        form.action = `/tasks/${id}`;
-        form.submit();
+    function deleteTask(id) {
+        if (confirm('Supprimer cette tâche ?')) {
+            const form = document.getElementById('deleteTaskForm');
+            form.action = `/tasks/${id}`;
+            form.submit();
+        }
     }
-}
 </script>
 @endsection
