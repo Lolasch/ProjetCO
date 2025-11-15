@@ -6,14 +6,13 @@
     <title>@yield('title', 'ProjetCO')</title>
     @vite('resources/css/app.css')
 </head>
-<body class="min-h-screen bg-[#f4f4f9] flex flex-col">
+<!-- FOND NOIR PARTOUT : bg-black sur body -->
+<body class="min-h-screen bg-black flex flex-col">
 
-    <!-- HEADER FOND BLEU SANS LOGO -->
+    <!-- Header violet/bleu, toujours full width -->
     <header class="flex items-center justify-between py-6 px-10" style="background-color: #5b6cb2;">
         <span class="text-4xl font-extrabold text-white tracking-tight">ProjetCO</span>
-        <!-- Icônes notification + compte -->
         <div class="flex items-center space-x-8">
-            <!-- Notification icon -->
             <a href="{{ route('notifications.index') }}" class="focus:outline-none relative">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="#f4f4f9" class="w-7 h-7">
                     <path d="M10 2a6 6 0 00-6 6v2.6c0 .486-.178.958-.504 1.317l-.438.452A1 1 0 004 15h12a1 1 0 00.942-1.369l-.438-.451A2.06 2.06 0 0116 10.6V8a6 6 0 00-6-6zm0 16a2 2 0 002-2H8a2 2 0 002 2z" />
@@ -31,7 +30,6 @@
                     @endif
                 @endauth
             </a>
-            <!-- Profil avec dropdown -->
             <div x-data="{ open: false }" class="relative">
                 <button @click="open = !open" class="focus:outline-none">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="#f4f4f9" viewBox="0 0 24 24" class="w-8 h-8">
@@ -59,13 +57,13 @@
         </div>
     </header>
 
-    <main class="flex-grow py-8 px-6">
-        @yield('content')
-    </main>
+    <!-- Aucun main, aucun fond clair, aucun padding global -->
+    @yield('content')
 
-    <footer class="w-full py-4 mt-10 text-center text-sm text-white" style="background-color: #5b6cb2;">
-        © 2025 – SAE 501 – Application de gestion de projet — Lola Schmitt
-    </footer>
+    <!-- Footer noir aussi pour fondu parfait -->
+<footer class="w-full py-4 mt-10 text-center text-sm text-white" style="background-color: #5b6cb2;">
+    © 2025 – SAE 501 – Application de gestion de projet — Lola Schmitt
+</footer>
 
     <script src="//unpkg.com/alpinejs" defer></script>
 </body>

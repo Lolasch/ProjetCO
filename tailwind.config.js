@@ -1,19 +1,18 @@
 module.exports = {
   theme: {
     extend: {
-      fontFamily: {
-        'title': ['Momo Trust Display', 'sans-serif'],
-        'sans': ['Open Sans', 'sans-serif'],
+      colors: {
+        kanban: {
+          todo: '#b3bdf5',
+          in_progress: '#81aacb',
+          done: '#2d176b',
+          task: {
+            todo: '#fff',
+            in_progress: '#cee3f6',
+            done: '#642667',
+          },
+        },
       },
     },
   },
-  content: [
-    './resources/views/**/*.blade.php',
-    './resources/js/**/*.js',
-    './resources/js/**/*.vue',
-    './resources/css/**/*.css',
-    './app/Http/Livewire/**/*.php',
-    './resources/**/*.md',
-  ],
-  plugins: [],
 }
