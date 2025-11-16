@@ -7,7 +7,7 @@
     $clientUrl = route('projects.sharedView', ['project'=>$project->id_project, 'code'=>$clientCode]);
 @endphp
 
-<div class="bg-[#f9fafb] min-h-screen px-6 py-8">
+<div class="px-6 py-8">
   <div class="max-w-7xl mx-auto flex flex-col gap-4">
 
     <!-- Ligne 1 : Rapport + Membres projet bien alignés (en bas) -->
@@ -46,7 +46,7 @@
           <div class="flex flex-wrap gap-3 items-center mb-2">
             @foreach($members as $m)
               <div class="flex items-center px-5 py-2 rounded-full bg-[#9099cd] text-white font-bold text-base gap-3 shadow"
-                  style="@if($m->pivot->role === 'manager') background:#646db1; @elseif($m->pivot->role === 'client') background:#cad3e9;color:#23255f; @endif">
+                   style="@if($m->pivot->role === 'manager') background:#646db1; @elseif($m->pivot->role === 'client') background:#cad3e9;color:#23255f; @endif">
                 {{ $m->name }}
                 <span class="ml-2">{{ ucfirst($m->pivot->role) }}</span>
               </div>

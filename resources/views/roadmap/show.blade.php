@@ -1,63 +1,88 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
+<div class="w-full px-2 py-8 flex flex-col items-center">
 
-    <h1 class="text-2xl font-bold mb-4">Roadmap : {{ $project->name }}</h1>
+    <div class="w-full max-w-[1800px] mx-auto">
 
-    @if($currentRole === 'manager')
-        <!-- Ajout sprint et release seulement pour le chef -->
-        <a href="{{ route('sprints.create', $project->id_project) }}"
-           class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded mb-4 inline-block">
-           + Ajouter un sprint
-        </a>
-
-        <a href="{{ route('releases.create', $project->id_project) }}"
-           class="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded mb-4 inline-block">
-           + Ajouter une release
-        </a>
-    @endif
-
-    <div id="calendar" class="mt-6 border rounded-lg shadow p-4"></div>
-</div>
-
-<!-- Modale Epic (lecture seule tâches, tout rôle) -->
-<div id="epicModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-    <div class="bg-white rounded-lg shadow-lg w-96 max-w-full p-4">
-        <div class="flex justify-between items-center mb-4">
-            <h3 id="epicTitle" class="text-lg font-bold"></h3>
-            <button onclick="closeEpicModal()" class="text-gray-600 hover:text-gray-800">&times;</button>
+        <!-- Ligne retour -->
+        <div class="flex items-center gap-6 mb-8">
+            <a href="{{ route('dashboard') }}"
+               class="inline-flex items-center bg-[#5b6cb2] text-white font-bold px-5 py-2 rounded-full text-sm shadow-md hover:bg-[#39356d] transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+                Retour aux projets
+            </a>
         </div>
-        <div id="epicTasks" class="mb-4"></div>
+
+        @if($currentRole === 'manager')
+            <div class="flex flex-wrap gap-3 mb-6 justify-end">
+                <a href="{{ route('sprints.create', $project->id_project) }}"
+                   class="bg-[#8fc8b2] hover:bg-[#4e9893] text-[#111016] font-semibold px-5 py-2 rounded-full text-base shadow-md transition">
+                   + Ajouter un sprint
+                </a>
+                <a href="{{ route('releases.create', $project->id_project) }}"
+                   class="bg-[#e7b8e8] hover:bg-[#f9c6f4] text-[#3b163f] font-semibold px-5 py-2 rounded-full text-base shadow-md transition">
+                   + Ajouter une release
+                </a>
+            </div>
+        @endif
+
+        <!-- Calendrier grand format -->
+        <div id="calendar"
+             class="mt-0 rounded-2xl border border-[#2f3148] bg-[#1f202b] shadow-inner p-6"
+             style="min-height:850px;">
+        </div>
     </div>
 </div>
 
-<!-- Modale Release (suppression uniquement pour chef) -->
-<div id="releaseModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-    <div class="bg-white rounded-lg shadow-lg w-96 max-w-full p-4">
+<!-- Modale Epic -->
+<div id="epicModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-[#19181f] rounded-2xl shadow-2xl w-96 max-w-full p-5 border border-[#3a324a]">
         <div class="flex justify-between items-center mb-4">
-            <h3 id="releaseTitle" class="text-lg font-bold"></h3>
-            <button onclick="closeReleaseModal()" class="text-gray-600 hover:text-gray-800">&times;</button>
+            <h3 id="epicTitle" class="text-lg font-bold text-white"></h3>
+            <button onclick="closeEpicModal()" class="text-[#b1b9ea] hover:text-white text-2xl leading-none">&times;</button>
         </div>
-        <div id="releaseInfo" class="mb-4"></div>
+        <div id="epicTasks" class="mb-2 max-h-72 overflow-y-auto pr-1 space-y-2"></div>
+    </div>
+</div>
+
+<!-- Modale Release -->
+<div id="releaseModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-[#19181f] rounded-2xl shadow-2xl w-96 max-w-full p-5 border border-[#3a324a]">
+        <div class="flex justify-between items-center mb-4">
+            <h3 id="releaseTitle" class="text-lg font-bold text-white"></h3>
+            <button onclick="closeReleaseModal()" class="text-[#b1b9ea] hover:text-white text-2xl leading-none">&times;</button>
+        </div>
+        <div id="releaseInfo" class="mb-4 text-sm text-[#d4d5f8]"></div>
         @if($currentRole === 'manager')
         <form id="deleteReleaseForm" method="POST">
             @csrf
             @method('DELETE')
-            <button type="submit" class="bg-red-500 px-3 py-1 rounded text-white hover:bg-red-600">Supprimer</button>
+            <button type="submit"
+                    class="bg-[#F7615F] px-3 py-1.5 rounded-lg text-white text-sm font-semibold hover:bg-[#d64545] transition">
+                Supprimer
+            </button>
         </form>
         @endif
     </div>
 </div>
 
-<a href="{{ route('dashboard') }}"
-   class="inline-block bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300 mb-4">
-    ← Retour aux projets
-</a>
-
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-
+<style>
+.fc .fc-toolbar-title,
+.fc .fc-col-header-cell-cushion {
+    color: #fff !important;
+}
+.fc .fc-daygrid-day-number {
+    color: #fff !important;
+}
+.fc .fc-col-header-cell {
+    background: transparent !important;
+}
+</style>
 <script>
 function openEpicModal(epic) {
     document.getElementById('epicTitle').innerText = epic.title;
@@ -69,11 +94,11 @@ function openEpicModal(epic) {
         if(task.status === 'in_progress') { statusText = 'En cours'; statusColor = 'bg-yellow-300 text-yellow-800'; }
         else if(task.status === 'done') { statusText = 'Terminé'; statusColor = 'bg-green-300 text-green-800'; }
         let taskEl = document.createElement('div');
-        taskEl.classList.add('mb-2', 'p-2', 'border', 'rounded', 'flex', 'justify-between', 'items-center');
+        taskEl.classList.add('mb-2', 'p-2', 'border', 'border-[#343347]', 'rounded-xl', 'flex', 'justify-between', 'items-center', 'bg-[#232332]');
         taskEl.innerHTML = `
             <div class="flex items-center gap-2">
-                <span class="font-semibold">${task.title}</span>
-                <span class="px-2 py-1 rounded ${statusColor} text-sm">${statusText}</span>
+                <span class="font-semibold text-sm text-white">${task.title}</span>
+                <span class="px-2 py-1 rounded ${statusColor} text-xs">${statusText}</span>
             </div>
         `;
         epicTasksDiv.appendChild(taskEl);
@@ -82,33 +107,31 @@ function openEpicModal(epic) {
     document.getElementById('epicModal').classList.remove('hidden');
     document.getElementById('epicModal').classList.add('flex');
 }
-
 function closeEpicModal() {
     document.getElementById('epicModal').classList.add('hidden');
     document.getElementById('epicModal').classList.remove('flex');
 }
-
 function openReleaseModal(release) {
     document.getElementById('releaseTitle').innerText = release.title;
     document.getElementById('releaseInfo').innerHTML = `
-        <p>Date de release : ${release.release_date}</p>
-        <p>Projet : {{ $project->name }}</p>
+        <p class="mb-1">Date de release : <span class="font-semibold">${release.release_date}</span></p>
+        <p class="mb-1">Projet : <span class="font-semibold">{{ $project->name }}</span></p>
     `;
+    @if($currentRole === 'manager')
     document.getElementById('deleteReleaseForm').action = `/releases/${release.id}`;
+    @endif
     document.getElementById('releaseModal').classList.remove('hidden');
     document.getElementById('releaseModal').classList.add('flex');
 }
-
 function closeReleaseModal() {
     document.getElementById('releaseModal').classList.add('hidden');
     document.getElementById('releaseModal').classList.remove('flex');
 }
-
 document.addEventListener('DOMContentLoaded', function() {
     const calendarEl = document.getElementById('calendar');
     const calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
-        height: 'auto',
+        height: 850,
         locale: 'fr',
         headerToolbar: {
             left: 'prev,next today',
@@ -127,7 +150,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 title: '{{ $sprint->name }}',
                 start: '{{ $sprint->start_date }}',
                 end: '{{ $sprint->end_date }}',
-                color: '{{ $sprint->color ?? "#1e40af" }}',
+                color: '{{ $sprint->color ?? "#5b6cb2" }}',
                 extendedProps: {
                     epics: [
                         @foreach($sprint->epics as $epic)
@@ -149,7 +172,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             },
             @endforeach
-
             @foreach($releases as $release)
             {
                 id: 'release-{{ $release->id }}',
@@ -162,34 +184,34 @@ document.addEventListener('DOMContentLoaded', function() {
         ],
         eventContent: function(arg) {
             let el = document.createElement('div');
-            el.classList.add('p-1');
-
+            el.classList.add('p-1', 'rounded-md');
             let titleEl = document.createElement('div');
-            titleEl.innerHTML = `<strong>${arg.event.title}</strong>`;
+            titleEl.innerHTML = `<strong class="text-xs text-white">${arg.event.title}</strong>`;
+            titleEl.classList.add('text-white');
             el.appendChild(titleEl);
-
-            // Sprints avec epics
             if(!arg.event.extendedProps.isRelease){
                 @if($currentRole === 'manager')
                 let btnContainer = document.createElement('div');
-                btnContainer.classList.add('flex', 'justify-between', 'mt-1');
+                btnContainer.classList.add('flex', 'justify-between', 'mt-1', 'gap-1');
                 btnContainer.innerHTML = `
-                    <a href="/sprints/${arg.event.id.split('-')[1]}/epics/create" class="text-sm bg-green-500 px-2 py-1 rounded text-white hover:bg-green-600">+ Epic</a>
-                    <div>
-                        <a href="/sprints/${arg.event.id.split('-')[1]}/edit" class="text-sm bg-yellow-500 px-2 py-1 rounded text-white hover:bg-yellow-600">Modifier</a>
+                    <a href="/sprints/${arg.event.id.split('-')[1]}/epics/create"
+                       class="text-[10px] bg-[#8fc8b2] px-1.5 py-0.5 rounded text-[#111016] hover:bg-[#4e9893]">+ Epic</a>
+                    <div class="flex gap-1">
+                        <a href="/sprints/${arg.event.id.split('-')[1]}/edit"
+                           class="text-[10px] bg-[#eab676] px-1.5 py-0.5 rounded text-white hover:bg-[#c98c3c]">Modif.</a>
                         <form action="/sprints/${arg.event.id.split('-')[1]}" method="POST" style="display:inline;">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="text-sm bg-red-500 px-2 py-1 rounded text-white hover:bg-red-600">Supprimer</button>
+                            <button type="submit"
+                                    class="text-[10px] bg-[#F7615F] px-1.5 py-0.5 rounded text-white hover:bg-[#d64545]">Suppr.</button>
                         </form>
                     </div>
                 `;
                 el.appendChild(btnContainer);
                 @endif
-
                 arg.event.extendedProps.epics.forEach(epic => {
                     let epicEl = document.createElement('div');
-                    epicEl.classList.add('mt-1', 'px-2', 'py-2', 'bg-gray-700', 'text-white', 'rounded', 'text-sm', 'cursor-pointer', 'inline-block', 'mr-2', 'mb-2');
+                    epicEl.classList.add('mt-1', 'px-2', 'py-1', 'bg-[#262432]', 'text-white', 'rounded-full', 'text-[10px]', 'cursor-pointer', 'inline-block', 'mr-1', 'mb-1', 'border', 'border-[#8b6ac8]/70');
                     epicEl.innerText = epic.title;
                     epicEl.onclick = () => openEpicModal(epic);
                     el.appendChild(epicEl);
@@ -202,11 +224,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     release_date: arg.event.start
                 });
             }
-
             return { domNodes: [el] };
         }
     });
-
     calendar.render();
 });
 </script>
