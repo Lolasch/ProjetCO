@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="bg-black min-h-screen flex flex-col items-center py-10 w-full">
+<div class="flex flex-col items-center py-10 w-full">
 
     {{-- HEADER RETOUR + SPRINT SELECT --}}
     <div class="w-full max-w-[1400px] flex flex-row justify-between items-center mb-8">
@@ -195,13 +195,11 @@
             Fermer
           </button>
 
-          {{-- Enregistrer : caché par défaut, affiché par JS si autorisé --}}
           <button type="submit" form="taskForm" id="saveButton"
                   class="bg-[#8fc8b2] text-[#19181b] px-4 py-2 rounded-lg font-medium hover:bg-[#4e9893] transition hidden">
             Enregistrer
           </button>
 
-          {{-- Supprimer : caché par défaut aussi --}}
           <button type="button" id="deleteButton"
                   class="bg-[#e38b99] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#c1546b] transition hidden">
             Supprimer
@@ -340,7 +338,7 @@
             deleteBtn.classList.remove('hidden');
             deleteBtn.onclick = () => deleteTask(taskId);
         }
-        // CLIENT ou associé sur tâche d'un autre : lecture seule, aucun bouton
+        // CLIENT ou associé sur tâche d'un autre : lecture seule
     }
 
     function closeTaskModal() {
