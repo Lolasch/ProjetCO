@@ -62,6 +62,7 @@ class TaskController extends Controller
         if ($role !== 'manager') {
             unset($data['assigned_to']);
         }
+
         $task->update([
             'title' => $data['title'],
             'description' => $data['description'] ?? null,
@@ -71,6 +72,7 @@ class TaskController extends Controller
             'due_date' => $data['due_date'],
         ]);
 
+        // Notification de mise à jour pour l'associé
         if ($task->assigned_to && $task->assigned_to != auth()->id()) {
             $notif = Notification::create([
                 'user_id' => $task->assigned_to,
@@ -90,6 +92,39 @@ class TaskController extends Controller
                                 ->subject('Notification ProjetCO');
                     }
                 );
+            }
+        }
+
+        // Notification de retard si la tâche est en retard
+        if ($task->assigned_to && $task->due_date < now()->toDateString() && $task->status != 'done') {
+            // Vérifier s'il y a déjà une notif de retard pour éviter les doublons
+            $existingNotif = Notification::where('user_id', $task->assigned_to)
+                ->where('task_id', $task->id_task)
+                ->where('type', 'deadline')
+                ->where('is_read', false)
+                ->first();
+
+            if (!$existingNotif) {
+                $delayNotif = Notification::create([
+                    'user_id' => $task->assigned_to,
+                    'type' => 'deadline',
+                    'task_id' => $task->id_task,
+                    'project_id' => $project ? $project->id_project : null,
+                    'title' => "Tâche en retard : '{$task->title}'",
+                    'body' => "La tâche était due le {$task->due_date}. Veuillez la terminer au plus vite.",
+                    'is_read' => false,
+                ]);
+
+                $user = $task->assignee;
+                if($user && $user->email){
+                    Mail::raw(
+                        $delayNotif->title . "\n\n" . ($delayNotif->body ?? ""),
+                        function($message) use ($user) {
+                            $message->to($user->email)
+                                    ->subject(' Notification ProjetCO - Retard');
+                        }
+                    );
+                }
             }
         }
 
