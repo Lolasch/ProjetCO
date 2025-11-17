@@ -41,6 +41,128 @@
         </div>
     </div>
 
+    {{-- BARRE DE FILTRAGE --}}
+    @php
+        $hasActiveFilters = $filters['keyword'] || $filters['assignee'] || $filters['due_date'] || $filters['status'];
+    @endphp
+
+    <div class="w-full max-w-[1400px] mb-6">
+        <!-- Bouton Filtrer + Filtres actifs -->
+        <div class="flex items-center gap-3 mb-3">
+            <button type="button" onclick="toggleFilterPanel()"
+                    class="flex items-center gap-2 bg-[#9066ad] hover:bg-[#7a4f8e] text-white px-4 py-2 rounded-lg font-medium transition text-sm"
+                    id="filterToggleBtn">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                Filtrer
+            </button>
+
+            <!-- Affichage des filtres actifs (badges) -->
+            @if($hasActiveFilters)
+                <div class="flex flex-wrap gap-2 items-center">
+                    <span class="text-xs text-[#ba78e8] font-semibold">Actifs :</span>
+
+                    @if($filters['keyword'])
+                        <span class="text-xs bg-[#9066ad] text-white px-3 py-1.5 rounded-full">"{{ $filters['keyword'] }}"</span>
+                    @endif
+
+                    @if($filters['assignee'])
+                        @php
+                            $assigneeUser = $associates->find($filters['assignee']);
+                        @endphp
+                        <span class="text-xs bg-[#9066ad] text-white px-3 py-1.5 rounded-full">{{ $assigneeUser->name ?? 'Inconnu' }}</span>
+                    @endif
+
+                    @if($filters['due_date'])
+                        <span class="text-xs bg-[#9066ad] text-white px-3 py-1.5 rounded-full">avant {{ $filters['due_date'] }}</span>
+                    @endif
+
+                    @if($filters['status'])
+                        @php
+                            $statusLabels = ['todo' => 'À faire', 'in_progress' => 'En cours', 'done' => 'Terminé'];
+                        @endphp
+                        <span class="text-xs bg-[#9066ad] text-white px-3 py-1.5 rounded-full">{{ $statusLabels[$filters['status']] }}</span>
+                    @endif
+                </div>
+            @endif
+        </div>
+
+        <!-- Panneau de filtrage (hidden par défaut) -->
+        <form method="GET" action="{{ route('projects.kanban', $project->id_project) }}" class="bg-[#24202a] border border-[#4b4155] rounded-lg p-4 hidden" id="filterPanel">
+
+            <!-- Garder le sprint sélectionné -->
+            @if($sprint)
+                <input type="hidden" name="sprint" value="{{ $sprint->id_sprint }}">
+            @endif
+
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
+
+                <!-- Recherche par mot-clé -->
+                <div>
+                    <label class="block text-xs font-semibold text-[#ba78e8] mb-1.5">Rechercher</label>
+                    <input type="text"
+                           name="keyword"
+                           placeholder="Titre, description..."
+                           value="{{ old('keyword', $filters['keyword'] ?? '') }}"
+                           class="w-full border border-[#4b4155] rounded-lg p-2 bg-[#1b1a20] text-white text-sm
+                                  focus:border-[#9066ad] focus:ring-1 focus:ring-[#9066ad] outline-none transition">
+                </div>
+
+                <!-- Filtrer par responsable -->
+                <div>
+                    <label class="block text-xs font-semibold text-[#ba78e8] mb-1.5">Responsable</label>
+                    <select name="assignee"
+                            class="w-full border border-[#4b4155] rounded-lg p-2 bg-[#24202a] text-white text-sm font-medium
+                                   focus:border-[#9066ad] focus:ring-1 focus:ring-[#9066ad] outline-none transition">
+                        <option value="">Responsable</option>
+                        @foreach($associates as $user)
+                            <option value="{{ $user->id_user }}"
+                                @if($filters['assignee'] == $user->id_user) selected @endif>
+                                {{ $user->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Filtrer par date d'échéance -->
+                <div>
+                    <label class="block text-xs font-semibold text-[#ba78e8] mb-1.5">Avant le</label>
+                    <input type="date"
+                           name="due_date"
+                           value="{{ old('due_date', $filters['due_date'] ?? '') }}"
+                           class="w-full border border-[#4b4155] rounded-lg p-2 bg-[#1b1a20] text-white text-sm
+                                  focus:border-[#9066ad] focus:ring-1 focus:ring-[#9066ad] outline-none transition">
+                </div>
+
+                <!-- Filtrer par statut -->
+                <div>
+                    <label class="block text-xs font-semibold text-[#ba78e8] mb-1.5">Statut</label>
+                    <select name="status"
+                            class="w-full border border-[#4b4155] rounded-lg p-2 bg-[#24202a] text-white text-sm font-medium
+                                   focus:border-[#9066ad] focus:ring-1 focus:ring-[#9066ad] outline-none transition">
+                        <option value="">Statut</option>
+                        <option value="todo" @if($filters['status'] == 'todo') selected @endif>À faire</option>
+                        <option value="in_progress" @if($filters['status'] == 'in_progress') selected @endif>En cours</option>
+                        <option value="done" @if($filters['status'] == 'done') selected @endif>Terminé</option>
+                    </select>
+                </div>
+
+                <!-- Boutons Appliquer et Réinitialiser -->
+                <div class="flex gap-2">
+                    <button type="submit"
+                            class="flex-1 bg-[#8fc8b2] hover:bg-[#4e9893] text-[#19181b] px-4 py-2 rounded-lg font-medium transition text-sm">
+                        Appliquer
+                    </button>
+                    <a href="{{ route('projects.kanban', $project->id_project) }}"
+                       class="flex-1 bg-[#9066ad] hover:bg-[#7a4f8e] text-white px-4 py-2 rounded-lg font-medium transition text-sm text-center">
+                        Réinitialiser
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
     {{-- COLONNES KANBAN --}}
     <main class="w-full max-w-[1400px] flex flex-col lg:flex-row space-y-8 lg:space-y-0 lg:space-x-8 justify-center items-start">
         @foreach(['todo' => 'À faire', 'in_progress' => 'En cours', 'done' => 'Terminé'] as $statusKey => $statusLabel)
@@ -78,6 +200,12 @@
                                     $alerte_color = 'bg-orange-200 text-orange-800';
                                 }
                             }
+
+                            // Récupère la personne assignée
+                            $assignedUser = null;
+                            if ($task->assigned_to) {
+                                $assignedUser = $associates->find($task->assigned_to);
+                            }
                         @endphp
 
                         <div
@@ -93,22 +221,37 @@
                             onclick="if(!window.dragged){openTaskModal(this, '{{ auth()->user()->id_user }}', '{{ $currentRole }}');}"
                             style="cursor:pointer;"
                         >
-                            <div class="flex items-center justify-between gap-3 mb-2">
-                                <span class="font-bold text-base text-[#ebeafd] break-words">{{ $task->title }}</span>
+                            <!-- En-tête: titre + epic -->
+                            <div class="flex items-center justify-between gap-3 mb-3">
+                                <span class="font-bold text-base text-[#ebeafd] break-words flex-1">{{ $task->title }}</span>
                                 @if($task->epic)
                                     <span class="bg-[#ba78e8] text-white text-xs rounded-full px-3 py-1 whitespace-nowrap">
                                         {{ $task->epic->name }}
                                     </span>
                                 @endif
                             </div>
-                            <span class="text-xs text-[#bac8df] mb-1">
+
+                            <!-- Date d'échéance -->
+                            <span class="text-xs text-[#bac8df] mb-3">
                                 Échéance : {{ \Carbon\Carbon::parse($task->due_date)->format('d/m/Y') }}
                             </span>
+
+                            <!-- Alerte si nécessaire -->
                             @if($alerte)
-                                <div class="flex items-center justify-start mt-3">
+                                <div class="flex items-center justify-start mb-3">
                                     <span class="inline-flex items-center px-3 py-1 {{ $alerte_color }} text-xs font-semibold rounded-lg">
                                         {{ $alerte }}
                                     </span>
+                                </div>
+                            @endif
+
+                            <!-- Avatar de la personne assignée -->
+                            @if($assignedUser)
+                                <div class="flex items-center gap-2 mt-2 pt-2 border-t border-[#4b4155]">
+                                    <div class="w-7 h-7 rounded-full bg-[#023e8a] text-white text-xs font-bold flex items-center justify-center">
+                                        {{ strtoupper(substr($assignedUser->name, 0, 1)) }}
+                                    </div>
+                                    <span class="text-xs text-[#e2e9f8] font-medium">{{ $assignedUser->name }}</span>
                                 </div>
                             @endif
                         </div>
@@ -215,10 +358,21 @@
     </form>
 </div>
 
-{{-- SCRIPT DRAG & DROP + MODAL --}}
+{{-- SCRIPT DRAG & DROP + MODAL + TOGGLE FILTRE --}}
 <script>
     let dragged = null;
     window.dragged = false;
+
+    // Toggle du panneau de filtrage
+    function toggleFilterPanel() {
+        const panel = document.getElementById('filterPanel');
+        panel.classList.toggle('hidden');
+    }
+
+    // Affiche le panel de filtre si des filtres sont actifs au chargement
+    @if($hasActiveFilters)
+        document.getElementById('filterPanel').classList.remove('hidden');
+    @endif
 
     // Drag & drop seulement si draggables (manager ou associé propriétaire)
     document.querySelectorAll('.kanban-task').forEach(task => {
@@ -286,7 +440,6 @@
         modal.classList.remove('hidden');
         modal.classList.add('flex');
 
-        // Remplir les champs
         title.value    = taskDiv.dataset.title;
         desc.value     = taskDiv.dataset.description;
         epic.value     = taskDiv.dataset.epic || '';
@@ -297,7 +450,6 @@
         const assignedTo = taskDiv.dataset.assigned_to;
         form.action      = `/tasks/${taskId}`;
 
-        // Par défaut : lecture seule + boutons cachés
         title.disabled    = true;
         desc.disabled     = true;
         epic.disabled     = true;
@@ -310,7 +462,6 @@
         deleteBtn.classList.add('hidden');
         deleteBtn.onclick = null;
 
-        // MANAGER : tout accès
         if (currentRole === 'manager') {
             title.disabled    = false;
             desc.disabled     = false;
@@ -324,12 +475,11 @@
             deleteBtn.classList.remove('hidden');
             deleteBtn.onclick = () => deleteTask(taskId);
         }
-        // ASSOCIÉ propriétaire : peut modifier SA tâche + supprimer
         else if (currentRole === 'associate' && String(currentUserId) === String(assignedTo)) {
             title.disabled    = false;
             desc.disabled     = false;
             epic.disabled     = false;
-            assignee.disabled = true;  // ne change pas d'assignation
+            assignee.disabled = true;
             dueDate.disabled  = false;
 
             saveBtn.classList.remove('hidden');
@@ -338,7 +488,6 @@
             deleteBtn.classList.remove('hidden');
             deleteBtn.onclick = () => deleteTask(taskId);
         }
-        // CLIENT ou associé sur tâche d'un autre : lecture seule
     }
 
     function closeTaskModal() {

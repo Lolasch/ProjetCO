@@ -20,7 +20,7 @@ class ProjectController extends Controller
         $user = Auth::user();
         $projects = $user->projects; // Assoc, manager, client
 
-        // Calcule la progression :
+        // Calcule la progression :
         foreach ($projects as $project) {
             $sprints = $project->sprints()->with(['epics.tasks', 'tasks'])->get();
             $tasks = collect();
@@ -79,15 +79,18 @@ class ProjectController extends Controller
     }
 
     // ==============================
-    // KANBAN
+    // KANBAN AVEC FILTRAGE
     // ==============================
     public function kanban(Project $project, Request $request)
     {
         $sprints = $project->sprints()->orderBy('start_date')->get();
         $sprintId = $request->query('sprint');
         $sprint = $sprintId ? $sprints->find($sprintId) : $sprints->first();
+
         $tasks = collect();
+
         if ($sprint) {
+            // Récupère toutes les tâches du sprint (avec épics et sans épics)
             $tasks = $sprint->epics()->with('tasks')->get()->flatMap(function ($epic) {
                 return $epic->tasks;
             });
@@ -95,23 +98,71 @@ class ProjectController extends Controller
                 ->whereNull('epic_id')
                 ->get());
         }
+
+        // ========== APPLIQUE LES FILTRES ==========
+
+        // 1. Filtrer par mot-clé (titre ou description)
+        $keyword = $request->query('keyword', '');
+        if ($keyword) {
+            $keyword = strtolower($keyword);
+            $tasks = $tasks->filter(function ($task) use ($keyword) {
+                $searchable = strtolower($task->title . ' ' . ($task->description ?? ''));
+                return strpos($searchable, $keyword) !== false;
+            });
+        }
+
+        // 2. Filtrer par responsable (assigned_to)
+        $assignee = $request->query('assignee', '');
+        if ($assignee) {
+            $tasks = $tasks->where('assigned_to', $assignee);
+        }
+
+        // 3. Filtrer par date d'échéance
+        $dueDate = $request->query('due_date', '');
+        if ($dueDate) {
+            $tasks = $tasks->filter(function ($task) use ($dueDate) {
+                return $task->due_date && $task->due_date <= $dueDate;
+            });
+        }
+
+        // 4. Filtrer par statut (optionnel)
+        $status = $request->query('status', '');
+        if ($status) {
+            $tasks = $tasks->where('status', $status);
+        }
+
+        // ========== ORGANISE PAR STATUT ==========
+
         $tasksByStatus = [
             'todo' => $tasks->where('status', 'todo'),
             'in_progress' => $tasks->where('status', 'in_progress'),
             'done' => $tasks->where('status', 'done'),
         ];
+
         $tasksCount = [
             'todo' => $tasksByStatus['todo']->count(),
             'in_progress' => $tasksByStatus['in_progress']->count(),
             'done' => $tasksByStatus['done']->count(),
         ];
+
         $associates = $project->members()->wherePivot('role', 'associate')->get();
 
-        // IMPORTANT : récupère le rôle du membre courant pour contrôle dans la vue
+        // Récupère le rôle du membre courant
         $currentMember = $project->members->firstWhere('id_user', auth()->id());
         $currentRole = $currentMember ? $currentMember->pivot->role : null;
 
-        return view('kanban.show', compact('project', 'sprint', 'sprints', 'tasksByStatus', 'tasksCount', 'associates', 'currentRole'));
+        // Récupère les valeurs actuelles des filtres pour repeupler les champs
+        $filters = [
+            'keyword' => $keyword,
+            'assignee' => $assignee,
+            'due_date' => $dueDate,
+            'status' => $status,
+        ];
+
+        return view('kanban.show', compact(
+            'project', 'sprint', 'sprints', 'tasksByStatus', 'tasksCount',
+            'associates', 'currentRole', 'filters'
+        ));
     }
 
     public function storeKanbanTask(Request $request, Project $project, $sprintId)
@@ -177,30 +228,29 @@ class ProjectController extends Controller
     }
 
     public function sharedView(Project $project, $code)
-{
-    $expected = 'CLIENT-' . strtoupper(substr(hash('crc32', $project->id_project . 'SECRET_SALT'),0,8));
-    if ($code !== $expected) {
-        abort(404);
-    }
-    // Prépare toutes les données nécessaires pour la vue reporting readonly
-    $sprints = $project->sprints()->with('epics.tasks')->get();
-    $members = $project->members;
-    $tasks = collect();
-    foreach ($sprints as $sprint) {
-        foreach ($sprint->epics as $epic) {
-            $tasks = $tasks->merge($epic->tasks);
+    {
+        $expected = 'CLIENT-' . strtoupper(substr(hash('crc32', $project->id_project . 'SECRET_SALT'),0,8));
+        if ($code !== $expected) {
+            abort(404);
         }
-        $tasks = $tasks->merge($sprint->tasks);
+        // Prépare toutes les données nécessaires pour la vue reporting readonly
+        $sprints = $project->sprints()->with('epics.tasks')->get();
+        $members = $project->members;
+        $tasks = collect();
+        foreach ($sprints as $sprint) {
+            foreach ($sprint->epics as $epic) {
+                $tasks = $tasks->merge($epic->tasks);
+            }
+            $tasks = $tasks->merge($sprint->tasks);
+        }
+        $count_todo = $tasks->where('status', 'todo')->count();
+        $count_progress = $tasks->where('status', 'in_progress')->count();
+        $count_done = $tasks->where('status', 'done')->count();
+        $count_total = $tasks->count();
+
+        return view('projects.viewer', compact(
+            'project', 'sprints', 'members',
+            'count_todo', 'count_progress', 'count_done', 'count_total'
+        ));
     }
-    $count_todo = $tasks->where('status', 'todo')->count();
-    $count_progress = $tasks->where('status', 'in_progress')->count();
-    $count_done = $tasks->where('status', 'done')->count();
-    $count_total = $tasks->count();
-
-    return view('projects.viewer', compact(
-        'project', 'sprints', 'members',
-        'count_todo', 'count_progress', 'count_done', 'count_total'
-    ));
-}
-
 }
