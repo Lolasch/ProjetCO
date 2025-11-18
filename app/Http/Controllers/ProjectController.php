@@ -12,13 +12,10 @@ use Illuminate\Support\Facades\Auth;
 
 class ProjectController extends Controller
 {
-    // ==============================
-    // DASHBOARD
-    // ==============================
     public function dashboard()
     {
         $user = Auth::user();
-        $projects = $user->projects; // Assoc, manager, client
+        $projects = $user->projects;
 
         // Calcule la progression :
         foreach ($projects as $project) {
@@ -37,9 +34,6 @@ class ProjectController extends Controller
         return view('dashboard', compact('projects'));
     }
 
-    // ==============================
-    // CREATION DE PROJET
-    // ==============================
     public function create()
     {
         return view('projects.create');
@@ -48,15 +42,12 @@ class ProjectController extends Controller
     public function store(Request $request)
     {
         $request->validate([ 'name' => 'required|string|max:255', ]);
-        $project = Project::create([ 'name' => $request->name, ]);
+        $project = Project::create([ 'name' => $request->name ]);
         $user = Auth::user();
         $project->members()->attach($user->id_user, ['role' => 'manager']);
         return redirect()->route('dashboard')->with('success', 'Projet créé avec succès !');
     }
 
-    // ==============================
-    // MODIFICATION DE PROJET
-    // ==============================
     public function edit(Project $project)
     {
         return view('projects.edit', compact('project'));
@@ -65,32 +56,24 @@ class ProjectController extends Controller
     public function update(Request $request, Project $project)
     {
         $request->validate([ 'name' => 'required|string|max:255', ]);
-        $project->update([ 'name' => $request->name, ]);
+        $project->update([ 'name' => $request->name ]);
         return redirect()->route('dashboard')->with('success', 'Projet mis à jour !');
     }
 
-    // ==============================
-    // SUPPRESSION DE PROJET
-    // ==============================
     public function destroy(Project $project)
     {
         $project->delete();
         return redirect()->route('dashboard')->with('success', 'Projet supprimé avec succès.');
     }
 
-    // ==============================
-    // KANBAN AVEC FILTRAGE
-    // ==============================
     public function kanban(Project $project, Request $request)
     {
         $sprints = $project->sprints()->orderBy('start_date')->get();
         $sprintId = $request->query('sprint');
         $sprint = $sprintId ? $sprints->find($sprintId) : $sprints->first();
-
         $tasks = collect();
 
         if ($sprint) {
-            // Récupère toutes les tâches du sprint (avec épics et sans épics)
             $tasks = $sprint->epics()->with('tasks')->get()->flatMap(function ($epic) {
                 return $epic->tasks;
             });
@@ -99,9 +82,6 @@ class ProjectController extends Controller
                 ->get());
         }
 
-        // ========== APPLIQUE LES FILTRES ==========
-
-        // 1. Filtrer par mot-clé (titre ou description)
         $keyword = $request->query('keyword', '');
         if ($keyword) {
             $keyword = strtolower($keyword);
@@ -111,13 +91,11 @@ class ProjectController extends Controller
             });
         }
 
-        // 2. Filtrer par responsable (assigned_to)
         $assignee = $request->query('assignee', '');
         if ($assignee) {
             $tasks = $tasks->where('assigned_to', $assignee);
         }
 
-        // 3. Filtrer par date d'échéance
         $dueDate = $request->query('due_date', '');
         if ($dueDate) {
             $tasks = $tasks->filter(function ($task) use ($dueDate) {
@@ -125,13 +103,10 @@ class ProjectController extends Controller
             });
         }
 
-        // 4. Filtrer par statut (optionnel)
         $status = $request->query('status', '');
         if ($status) {
             $tasks = $tasks->where('status', $status);
         }
-
-        // ========== ORGANISE PAR STATUT ==========
 
         $tasksByStatus = [
             'todo' => $tasks->where('status', 'todo'),
@@ -146,12 +121,9 @@ class ProjectController extends Controller
         ];
 
         $associates = $project->members()->wherePivot('role', 'associate')->get();
-
-        // Récupère le rôle du membre courant
         $currentMember = $project->members->firstWhere('id_user', auth()->id());
         $currentRole = $currentMember ? $currentMember->pivot->role : null;
 
-        // Récupère les valeurs actuelles des filtres pour repeupler les champs
         $filters = [
             'keyword' => $keyword,
             'assignee' => $assignee,
@@ -188,9 +160,6 @@ class ProjectController extends Controller
         return response()->json(['success' => true]);
     }
 
-    // ==============================
-    // AJOUTER UN MEMBRE
-    // ==============================
     public function addMember(Request $request, Project $project)
     {
         $request->validate([
@@ -203,9 +172,34 @@ class ProjectController extends Controller
         return back()->with('success', 'Membre ajouté au projet !');
     }
 
-    // ==============================
-    // REPORTING
-    // ==============================
+    public function removeMember($projectId, $userId)
+    {
+        $project = Project::findOrFail($projectId);
+        $project->members()->detach($userId);
+        return redirect()->back()->with('success', 'Membre supprimé du projet !');
+    }
+
+    // Modifier le rôle d'un membre (sauf manager)
+    public function updateMemberRole(Request $request, $projectId, $userId)
+    {
+        $request->validate([
+            'role' => 'required|in:associate,client',
+        ]);
+        $project = Project::findOrFail($projectId);
+        $member = $project->members()->find($userId);
+
+        if (!$member) {
+            return back()->with('error', 'Membre non trouvé !');
+        }
+
+        if ($member->pivot->role === 'manager') {
+            return back()->with('error', 'Impossible de modifier un manager !');
+        }
+
+        $project->members()->updateExistingPivot($userId, ['role' => $request->role]);
+        return back()->with('success', 'Rôle modifié avec succès !');
+    }
+
     public function reporting(Project $project)
     {
         $sprints = $project->sprints()->with(['epics.tasks', 'tasks'])->get();
@@ -233,7 +227,6 @@ class ProjectController extends Controller
         if ($code !== $expected) {
             abort(404);
         }
-        // Prépare toutes les données nécessaires pour la vue reporting readonly
         $sprints = $project->sprints()->with('epics.tasks')->get();
         $members = $project->members;
         $tasks = collect();
