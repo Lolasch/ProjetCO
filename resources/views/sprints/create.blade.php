@@ -30,7 +30,7 @@
         <div class="flex justify-between items-center">
             <a href="{{ route('projects.roadmap', $project->id_project) }}"
                class="bg-[#C9A8FD] text-[#232332] px-4 py-2 rounded-xl hover:bg-[#E0BFFD] transition">
-               ← Retour à la roadmap
+               Annuler
             </a>
             <button type="submit" class="bg-[#8EE6D7] text-[#232332] px-4 py-2 rounded-xl hover:bg-[#A4F2E3] transition">
                 Créer le sprint

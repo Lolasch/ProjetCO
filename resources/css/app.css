@@ -11,22 +11,85 @@
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
+/* FullCalendar styles */
+.fc .fc-toolbar-title,
+.fc .fc-col-header-cell-cushion {
+    color: #fff !important;
+    font-size: 1.1rem !important;
+}
+
+.fc .fc-daygrid-day-number {
+    color: #fff !important;
+    font-size: 0.85rem !important;
+}
+
+.fc .fc-col-header-cell {
+    background: transparent !important;
+    padding: 8px 4px !important;
+}
+
+.fc .fc-daygrid-day {
+    padding: 4px !important;
+}
+
+.fc-event {
+    margin-bottom: 3px !important;
+}
+
+.fc .fc-button {
+    padding: 4px 12px !important;
+    font-size: 0.85rem !important;
+}
+
+/* Calendar container */
+.calendar-container {
+    border-radius: 1rem;
+    border: 1px solid #2f3148;
+    background-color: #1f202b;
+    box-shadow: inset 0 0 0 0;
+    padding: 1rem;
+    min-height: 650px;
+}
+
+/* Scrollbar noir pour le calendrier */
+.calendar-container ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.calendar-container ::-webkit-scrollbar-track {
+    background: #1a1a1a;
+    border-radius: 4px;
+}
+
+.calendar-container ::-webkit-scrollbar-thumb {
+    background: #000;
+    border-radius: 4px;
+}
+
+.calendar-container ::-webkit-scrollbar-thumb:hover {
+    background: #333;
+}
+
 /* Scrollbar noire spéciale pour le formulaire popup */
 .scrollbar-noir {
   scrollbar-width: thin;
   scrollbar-color: #222 #19181b;
 }
+
 .scrollbar-noir::-webkit-scrollbar {
   width: 10px;
 }
+
 .scrollbar-noir::-webkit-scrollbar-track {
   background: #19181b;
 }
+
 .scrollbar-noir::-webkit-scrollbar-thumb {
   background: #222;
   border-radius: 6px;
 }
+
 .scrollbar-noir::-webkit-scrollbar-thumb:hover {
   background: #333;
 }
-

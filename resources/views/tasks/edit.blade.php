@@ -28,8 +28,10 @@
 
             <div>
                 <label for="assigned_to" class="block font-bold mb-2" style="color: #d5dff5;">Assigner à un associé :</label>
-                <select name="assigned_to" id="assigned_to" class="w-full rounded-lg px-4 py-2 border transition focus:outline-none focus:ring-2"
-                    style="background: rgba(177, 185, 234, 0.1); border-color: rgba(177, 185, 234, 0.3); color: #b1b9ea;">
+                <select name="assigned_to" id="assigned_to"
+                    class="w-full rounded-lg px-4 py-2 border transition focus:outline-none focus:ring-2"
+                    style="background: rgba(177, 185, 234, 0.1); border-color: rgba(177, 185, 234, 0.3); color: #b1b9ea;"
+                    {{ $userRole !== 'manager' ? 'disabled' : '' }}>
                     <option value="">-- Aucun --</option>
                     @foreach($associates as $user)
                         <option value="{{ $user->id_user }}"
@@ -38,6 +40,9 @@
                         </option>
                     @endforeach
                 </select>
+                @if($userRole !== 'manager')
+                    <p class="text-sm text-[#b1b9ea] mt-1">Seul le chef de projet peut modifier l'assignation.</p>
+                @endif
             </div>
 
             <div>
@@ -65,7 +70,6 @@
             </div>
         </form>
     </div>
-
     <div class="mt-6 flex justify-start px-4" style="max-width: 900px; margin-left: auto; margin-right: auto;">
         <a href="{{ url()->previous() }}"
            style="background: rgba(177, 185, 234, 0.2); color: #b1b9ea; border: 1px solid rgba(177, 185, 234, 0.5); padding: 0.5rem 1.5rem; border-radius: 0.75rem; font-weight: 600; box-shadow: 0 4px 12px rgba(91, 108, 178, 0.18); transition: background 0.3s ease; cursor: pointer; text-decoration: none;"

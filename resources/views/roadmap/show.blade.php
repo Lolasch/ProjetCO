@@ -2,9 +2,7 @@
 
 @section('content')
 <div class="w-full px-4 py-6 flex flex-col items-center">
-
     <div class="w-full max-w-[1600px] mx-auto">
-
         <!-- Ligne retour -->
         <div class="flex items-center gap-6 mb-6">
             <a href="{{ route('dashboard') }}"
@@ -19,20 +17,18 @@
         @if($currentRole === 'manager')
             <div class="flex flex-wrap gap-3 mb-5 justify-end">
                 <a href="{{ route('sprints.create', $project->id_project) }}"
-                   class="bg-[#8fc8b2] hover:bg-[#4e9893] text-[#111016] font-semibold px-4 py-2 rounded-full text-sm shadow-md transition">
+                   class="bg-[#8fc8b2] hover:bg-[#4e9893] text-white font-semibold px-4 py-2 rounded-full text-sm shadow-md transition">
                    + Ajouter un sprint
                 </a>
                 <a href="{{ route('releases.create', $project->id_project) }}"
-                   class="bg-[#e7b8e8] hover:bg-[#f9c6f4] text-[#3b163f] font-semibold px-4 py-2 rounded-full text-sm shadow-md transition">
+                   class="bg-[#e7b8e8] hover:bg-[#f9c6f4] text-white font-semibold px-4 py-2 rounded-full text-sm shadow-md transition">
                    + Ajouter une release
                 </a>
             </div>
         @endif
 
         <!-- Calendrier format optimisé -->
-        <div id="calendar"
-             class="mt-0 rounded-2xl border border-[#2f3148] bg-[#1f202b] shadow-inner p-4"
-             style="min-height:650px;">
+        <div id="calendar" class="calendar-container">
         </div>
     </div>
 </div>
@@ -61,7 +57,7 @@
             @csrf
             @method('DELETE')
             <button type="submit"
-                    class="bg-[#F7615F] px-3 py-1.5 rounded-lg text-white text-sm font-semibold hover:bg-[#d64545] transition">
+                    class="bg-[#DE2E4B] px-3 py-1.5 rounded-lg text-white text-sm font-semibold hover:bg-[#d64545] transition">
                 Supprimer
             </button>
         </form>
@@ -71,31 +67,7 @@
 
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-<style>
-.fc .fc-toolbar-title,
-.fc .fc-col-header-cell-cushion {
-    color: #fff !important;
-    font-size: 1.1rem !important;
-}
-.fc .fc-daygrid-day-number {
-    color: #fff !important;
-    font-size: 0.85rem !important;
-}
-.fc .fc-col-header-cell {
-    background: transparent !important;
-    padding: 8px 4px !important;
-}
-.fc .fc-daygrid-day {
-    padding: 4px !important;
-}
-.fc-event {
-    margin-bottom: 3px !important;
-}
-.fc .fc-button {
-    padding: 4px 12px !important;
-    font-size: 0.85rem !important;
-}
-</style>
+
 <script>
 function hexToRgba(hex, alpha) {
     const r = parseInt(hex.slice(1, 3), 16);
@@ -123,7 +95,6 @@ function openEpicModal(epic) {
         `;
         epicTasksDiv.appendChild(taskEl);
     });
-
     document.getElementById('epicModal').classList.remove('hidden');
     document.getElementById('epicModal').classList.add('flex');
 }
@@ -208,54 +179,65 @@ document.addEventListener('DOMContentLoaded', function() {
         ],
         eventContent: function(arg) {
             let el = document.createElement('div');
-            el.classList.add('p-2', 'rounded-lg', 'shadow-sm');
+            el.classList.add('p-3', 'rounded-lg', 'shadow-sm');
 
-            // Applique la couleur avec transparence (50%)
             const transparentColor = hexToRgba(arg.event.backgroundColor, 0.5);
             el.style.backgroundColor = transparentColor;
             el.style.border = `1px solid ${hexToRgba(arg.event.backgroundColor, 0.8)}`;
 
-            let titleEl = document.createElement('div');
-            titleEl.innerHTML = `<strong class="text-xs text-white">${arg.event.title}</strong>`;
-            titleEl.classList.add('text-white', 'mb-1.5');
-            el.appendChild(titleEl);
-
             if(!arg.event.extendedProps.isRelease){
-                @if($currentRole === 'manager')
-                let btnContainer = document.createElement('div');
-                btnContainer.classList.add('flex', 'justify-end', 'gap-1', 'mb-1.5');
-                btnContainer.innerHTML = `
-                    <a href="/sprints/${arg.event.id.split('-')[1]}/epics/create"
-                       class="text-[10px] bg-[#8fc8b2] px-2 py-0.5 rounded-md text-[#111016] hover:bg-[#4e9893] font-semibold transition">+ Epic</a>
-                    <a href="/sprints/${arg.event.id.split('-')[1]}/edit"
-                       class="text-[10px] bg-[#d4b068] px-2 py-0.5 rounded-md text-white hover:bg-[#c19a4e] font-semibold transition">Modifier</a>
-                    <form action="/sprints/${arg.event.id.split('-')[1]}" method="POST" style="display:inline;">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit"
-                                class="text-[10px] bg-[#e88d8b] px-2 py-0.5 rounded-md text-white hover:bg-[#d67673] font-semibold transition">Supprimer</button>
-                    </form>
+                // Header: titre à gauche + boutons Modifier/Supprimer à droite
+                let topRow = document.createElement('div');
+                topRow.classList.add('flex', 'justify-between', 'items-center', 'mb-2');
+                topRow.innerHTML = `
+                    <strong class="text-sm text-white">${arg.event.title}</strong>
+                    @if($currentRole === 'manager')
+                    <div class="flex gap-1">
+                        <a href="/sprints/${arg.event.id.split('-')[1]}/edit"
+                           class="text-[10px] bg-[#d4b068] px-2 py-0.5 rounded-md text-white hover:bg-[#c19a4e] font-semibold transition">Modifier</a>
+                        <form action="/sprints/${arg.event.id.split('-')[1]}" method="POST" style="display:inline;">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit"
+                                    class="text-[10px] bg-[#e88d8b] px-2 py-0.5 rounded-md text-white hover:bg-[#d67673] font-semibold transition">Supprimer</button>
+                        </form>
+                    </div>
+                    @endif
                 `;
-                el.appendChild(btnContainer);
+                el.appendChild(topRow);
+
+                @if($currentRole === 'manager')
+                // Bouton "Créer un Epic" sous le titre
+                let createEpicRow = document.createElement('div');
+                createEpicRow.classList.add('mb-2');
+                createEpicRow.innerHTML = `
+                    <a href="/sprints/${arg.event.id.split('-')[1]}/epics/create"
+                       class="inline-block text-[10px] bg-[#8fc8b2] px-2 py-1 rounded-md text-white hover:bg-[#4e9893] font-semibold transition">Créer un Epic</a>
+                `;
+                el.appendChild(createEpicRow);
                 @endif
 
-                // Affichage des epics côte à côte (grid)
+                // Epics grid
                 if(arg.event.extendedProps.epics.length > 0) {
                     let epicsContainer = document.createElement('div');
-                    epicsContainer.classList.add('grid', 'grid-cols-2', 'gap-1');
-
+                    epicsContainer.classList.add('grid', 'grid-cols-6', 'gap-1.5');
                     arg.event.extendedProps.epics.forEach(epic => {
                         let epicEl = document.createElement('div');
-                        epicEl.classList.add('px-2', 'py-1', 'bg-[#1a1a24]', 'text-white', 'rounded-md', 'text-[9px]', 'cursor-pointer', 'hover:bg-[#252530]', 'transition', 'text-center', 'truncate', 'font-medium');
+                        epicEl.classList.add('px-2', 'py-2', 'bg-[#1a1a24]', 'text-white', 'rounded', 'text-[9px]', 'cursor-pointer', 'hover:bg-[#252530]', 'transition', 'text-center', 'truncate', 'font-medium');
                         epicEl.innerText = epic.title;
-                        epicEl.title = epic.title; // Tooltip au survol
+                        epicEl.title = epic.title;
                         epicEl.onclick = () => openEpicModal(epic);
                         epicsContainer.appendChild(epicEl);
                     });
-
                     el.appendChild(epicsContainer);
                 }
             } else {
+                // Release: affiche le nom en blanc
+                let releaseTitle = document.createElement('div');
+                releaseTitle.innerHTML = `<strong class="text-sm text-white">${arg.event.title}</strong>`;
+                releaseTitle.classList.add('text-white', 'mb-1');
+                el.appendChild(releaseTitle);
+
                 el.style.cursor = 'pointer';
                 el.onclick = () => openReleaseModal({
                     id: arg.event.id.split('-')[1],

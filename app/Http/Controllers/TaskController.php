@@ -40,7 +40,10 @@ class TaskController extends Controller
             : ($task->sprint ? $task->sprint->project : null);
         $associates = $project ? $project->members()->wherePivot('role', 'associate')->get() : collect();
 
-        return view('tasks.edit', compact('task', 'associates'));
+        $userProject = $project ? $project->members->firstWhere('id_user', auth()->id()) : null;
+        $userRole = $userProject ? $userProject->pivot->role : null;
+
+        return view('tasks.edit', compact('task', 'associates', 'userRole'));
     }
 
     public function update(Request $request, Task $task)
