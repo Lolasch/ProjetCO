@@ -9,9 +9,7 @@
 
 <div class="px-6 py-8">
     <div class="max-w-7xl mx-auto flex flex-col gap-4">
-        <!-- Ligne 1 : Rapport + Membres -->
         <div class="grid grid-cols-4 gap-6 items-stretch">
-            <!-- Rapport des tâches -->
             <div class="col-span-1 flex flex-col justify-end">
                 <div class="bg-[#dde2f1] rounded-2xl px-4 pt-4 pb-0 shadow flex flex-col w-full h-full">
                     <div class="font-bold text-[#23255f] text-lg mb-3">Rapport des Tâches :</div>
@@ -36,7 +34,6 @@
                     </div>
                 </div>
             </div>
-            <!-- Membres du projet -->
             <div class="col-span-3 flex flex-col justify-end">
                 <div class="bg-[#e5e4f7] rounded-2xl px-8 py-5 shadow flex flex-col gap-3 h-full">
                     <h2 class="font-bold text-3xl text-[#23255f] mb-2">Membres du projet :</h2>
@@ -47,17 +44,15 @@
                             {{ $m->name }}
                             <span class="ml-2">{{ ucfirst($m->pivot->role) }}</span>
                             @if($currentRole === 'manager')
-                                <!-- Supprimer -->
-                                <form action="{{ route('projects.removeMember', [$project->id_project, $m->id_user]) }}" method="POST" class="ml-1">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="ml-1 text-[#F7615F] hover:text-[#d64545] text-base leading-none font-bold" title="Retirer">&times;</button>
-                                </form>
-                                <!-- Modifier (trois points - sauf manager) -->
                                 @if($m->pivot->role !== 'manager')
-                                <button type="button"
-                                    onclick="openEditModal({{ $m->id_user }}, '{{ $m->name }}', '{{ $m->pivot->role }}')"
-                                    class="ml-1 text-[#646db1] hover:text-[#23255f] text-xl leading-none font-bold" title="Modifier">⋯</button>
+                                    <form action="{{ route('projects.removeMember', [$project->id_project, $m->id_user]) }}" method="POST" class="ml-1">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="ml-1 text-[#F7615F] hover:text-[#d64545] text-base leading-none font-bold" title="Retirer">&times;</button>
+                                    </form>
+                                    <button type="button"
+                                        onclick="openEditModal({{ $m->id_user }}, '{{ $m->name }}', '{{ $m->pivot->role }}')"
+                                        class="ml-1 text-[#646db1] hover:text-[#23255f] text-xl leading-none font-bold" title="Modifier">⋯</button>
                                 @endif
                             @endif
                         </div>
@@ -80,7 +75,6 @@
                     </form>
                     @endif
                 </div>
-                <!-- Liens clients -->
                 <div class="bg-[#dde2f1] rounded-2xl py-3 px-6 font-bold text-base text-[#23255f] shadow flex flex-row items-center w-full mt-1 gap-3">
                     <span>Liens pour les clients</span>
                     <span class="ml-4 font-mono bg-white px-2 py-1 rounded text-xs flex-1">{{ $clientUrl }}</span>
@@ -88,8 +82,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Ligne cartes accès et graphs -->
         <div class="grid grid-cols-4 gap-6 w-full mt-2">
             <a href="{{ route('projects.kanban', $project->id_project) }}" class="bg-[#23255f] rounded-2xl flex flex-col items-center justify-center py-10 text-white text-xl font-bold shadow hover:scale-105 transition min-h-[130px]">Accès KANBAN</a>
             <a href="{{ route('projects.roadmap', $project->id_project) }}" class="bg-[#646db1] rounded-2xl flex flex-col items-center justify-center py-10 text-white text-xl font-bold shadow hover:scale-105 transition min-h-[130px]">Accès ROADMAP</a>
@@ -104,7 +96,6 @@
     </div>
 </div>
 
-<!-- MODAL MODIFIER MEMBRE -->
 <div id="editMemberModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50">
     <div class="bg-[#232332] rounded-2xl shadow-2xl w-96 max-w-full p-7 border border-[#31313f]">
         <div class="flex justify-between items-center mb-4">

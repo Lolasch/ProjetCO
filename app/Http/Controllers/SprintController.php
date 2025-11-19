@@ -8,13 +8,11 @@ use Illuminate\Http\Request;
 
 class SprintController extends Controller
 {
-    // Formulaire de création d’un sprint
     public function create(Project $project)
     {
         return view('sprints.create', compact('project'));
     }
 
-    // Enregistrer un sprint
     public function store(Request $request, Project $project)
     {
         $request->validate([
@@ -35,13 +33,11 @@ class SprintController extends Controller
                          ->with('success', 'Sprint créé avec succès !');
     }
 
-    // ✅ Formulaire d’édition
     public function edit(Sprint $sprint)
     {
         return view('sprints.edit', compact('sprint'));
     }
 
-    // ✅ Mise à jour du sprint
     public function update(Request $request, Sprint $sprint)
     {
         $request->validate([
@@ -57,7 +53,6 @@ class SprintController extends Controller
                          ->with('success', 'Sprint mis à jour avec succès !');
     }
 
-    // ✅ Suppression
     public function destroy(Sprint $sprint)
     {
         $sprint->delete();

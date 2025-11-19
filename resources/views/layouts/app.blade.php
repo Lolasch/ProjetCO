@@ -8,20 +8,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800&display=swap" rel="stylesheet">
 </head>
 <body class="min-h-screen bg-black flex flex-col" style="background: linear-gradient(120deg,#11101a 60%,#23235b 100%);">
-
-
-    <!-- Header unicolore lavande -->
 <header class="flex items-center justify-between py-4 px-8 w-full" style="background: #b1b9ea;">
-    <!-- Titre ProjetCO à gauche (lien vers dashboard) -->
     <a href="{{ route('dashboard') }}"
         class="font-extrabold tracking-tight focus:outline-none"
         style="color: #39259c; font-family: 'Poppins', sans-serif; font-size: 2rem; text-decoration: none;">
         ProjetCO
     </a>
-
-    <!-- Actions à droite (notifications, profil) -->
     <div class="flex items-center space-x-8">
-        <!-- Notifications -->
         <a href="{{ route('notifications.index') }}" class="focus:outline-none relative">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" style="color:#39259c" class="w-7 h-7 fill-current">
                 <path d="M10 2a6 6 0 00-6 6v2.6c0 .486-.178.958-.504 1.317l-.438.452A1 1 0 004 15h12a1 1 0 00.942-1.369l-.438-.451A2.06 2.06 0 0116 10.6V8a6 6 0 00-6-6zm0 16a2 2 0 002-2H8a2 2 0 002 2z"/>
@@ -39,7 +32,6 @@
                 @endif
             @endauth
         </a>
-        <!-- Profil / Déconnexion -->
         <div x-data="{ open: false }" class="relative">
             <button @click="open = !open" class="focus:outline-none cursor-pointer">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="color:#39259c" class="w-8 h-8 fill-current">

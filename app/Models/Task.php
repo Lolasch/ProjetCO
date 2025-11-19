@@ -24,19 +24,16 @@ class Task extends Model
         'sprint_id',
     ];
 
-    // Relation avec Epic
     public function epic()
     {
         return $this->belongsTo(Epic::class, 'epic_id');
     }
 
-    // Relation avec Sprint
     public function sprint()
     {
         return $this->belongsTo(Sprint::class, 'sprint_id');
     }
 
-    // Relation avec l'utilisateur assigné
     public function assignee()
     {
         return $this->belongsTo(User::class, 'assigned_to');

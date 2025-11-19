@@ -11,7 +11,7 @@
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
-/* FullCalendar styles */
+/* FullCalendrier */
 .fc .fc-toolbar-title,
 .fc .fc-col-header-cell-cushion {
     color: #fff !important;
@@ -41,7 +41,7 @@
     font-size: 0.85rem !important;
 }
 
-/* Calendar container */
+/* Calendrier container */
 .calendar-container {
     border-radius: 1rem;
     border: 1px solid #2f3148;
@@ -51,7 +51,7 @@
     min-height: 650px;
 }
 
-/* Scrollbar noir pour le calendrier */
+/* Scrollbar noir */
 .calendar-container ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -71,7 +71,7 @@
     background: #333;
 }
 
-/* Scrollbar noire spéciale pour le formulaire popup */
+/* Scrollbar noire popup */
 .scrollbar-noir {
   scrollbar-width: thin;
   scrollbar-color: #222 #19181b;

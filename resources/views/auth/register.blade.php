@@ -1,4 +1,4 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -9,7 +9,6 @@
     @vite('resources/css/app.css')
 </head>
 <body class="min-h-screen flex flex-col relative overflow-x-hidden" style="background: linear-gradient(120deg,#11101a 60%,#23235b 100%);">
-    <!-- Main form centré verticalement -->
     <main class="flex-grow flex flex-col items-center justify-center px-4">
         <div class="w-full max-w-md rounded-xl shadow-2xl p-8" style="background: rgba(20, 18, 50, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(177, 185, 234, 0.2);">
             <h1 class="text-2xl md:text-3xl font-bold text-center mb-6" style="color: #b1b9ea; font-family: 'Poppins', sans-serif;">Inscription</h1>
@@ -93,8 +92,6 @@
             </a>
         </div>
     </main>
-
-    <!-- Bouton retour avant le footer -->
     <div class="px-8 py-4">
         <a href="{{ url()->previous() }}"
            class="inline-block px-6 py-2 rounded-lg font-semibold shadow transition text-base cursor-pointer"
@@ -105,7 +102,6 @@
         </a>
     </div>
 
-    <!-- Footer lavande foncé en bas -->
     <footer class="w-full py-4 text-center text-sm" style="background: #979fcf; color: #39259c;">
         © 2025 – SAE 501 – Application de gestion de projet — Lola Schmitt
     </footer>

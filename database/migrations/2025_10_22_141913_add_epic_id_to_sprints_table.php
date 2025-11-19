@@ -13,8 +13,6 @@ public function up()
 {
     Schema::table('sprints', function (Blueprint $table) {
         $table->unsignedBigInteger('epic_id')->nullable()->after('project_id');
-
-        // Clé étrangère
         $table->foreign('epic_id')->references('id_epic')->on('epics')->onDelete('set null');
     });
 }

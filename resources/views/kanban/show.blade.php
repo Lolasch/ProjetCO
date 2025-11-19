@@ -2,8 +2,6 @@
 
 @section('content')
 <div class="flex flex-col items-center py-10 w-full">
-
-    {{-- HEADER RETOUR + SPRINT SELECT --}}
     <div class="w-full max-w-[1400px] flex flex-row justify-between items-center mb-8">
         <a href="{{ route('dashboard') }}"
            class="flex items-center bg-[#5b6cb2] text-white font-bold px-6 py-2 rounded-full text-base shadow">
@@ -40,14 +38,12 @@
             @endif
         </div>
     </div>
-
     {{-- BARRE DE FILTRAGE --}}
     @php
         $hasActiveFilters = $filters['keyword'] || $filters['assignee'] || $filters['due_date'] || $filters['status'];
     @endphp
 
     <div class="w-full max-w-[1400px] mb-6">
-        <!-- Bouton Filtrer + Filtres actifs -->
         <div class="flex items-center gap-3 mb-3">
             <button type="button" onclick="toggleFilterPanel()"
                     class="flex items-center gap-2 bg-[#9066ad] hover:bg-[#7a4f8e] text-white px-4 py-2 rounded-lg font-medium transition text-sm"
@@ -57,8 +53,6 @@
                 </svg>
                 Filtrer
             </button>
-
-            <!-- Affichage des filtres actifs (badges) -->
             @if($hasActiveFilters)
                 <div class="flex flex-wrap gap-2 items-center">
                     <span class="text-xs text-[#ba78e8] font-semibold">Actifs :</span>
@@ -87,18 +81,13 @@
                 </div>
             @endif
         </div>
-
-        <!-- Panneau de filtrage (hidden par défaut) -->
         <form method="GET" action="{{ route('projects.kanban', $project->id_project) }}" class="bg-[#24202a] border border-[#4b4155] rounded-lg p-4 hidden" id="filterPanel">
-
-            <!-- Garder le sprint sélectionné -->
             @if($sprint)
                 <input type="hidden" name="sprint" value="{{ $sprint->id_sprint }}">
             @endif
 
             <div class="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
 
-                <!-- Recherche par mot-clé -->
                 <div>
                     <label class="block text-xs font-semibold text-[#ba78e8] mb-1.5">Rechercher</label>
                     <input type="text"
@@ -109,7 +98,6 @@
                                   focus:border-[#9066ad] focus:ring-1 focus:ring-[#9066ad] outline-none transition">
                 </div>
 
-                <!-- Filtrer par responsable -->
                 <div>
                     <label class="block text-xs font-semibold text-[#ba78e8] mb-1.5">Responsable</label>
                     <select name="assignee"
@@ -124,8 +112,6 @@
                         @endforeach
                     </select>
                 </div>
-
-                <!-- Filtrer par date d'échéance -->
                 <div>
                     <label class="block text-xs font-semibold text-[#ba78e8] mb-1.5">Avant le</label>
                     <input type="date"
@@ -134,8 +120,6 @@
                            class="w-full border border-[#4b4155] rounded-lg p-2 bg-[#1b1a20] text-white text-sm
                                   focus:border-[#9066ad] focus:ring-1 focus:ring-[#9066ad] outline-none transition">
                 </div>
-
-                <!-- Filtrer par statut -->
                 <div>
                     <label class="block text-xs font-semibold text-[#ba78e8] mb-1.5">Statut</label>
                     <select name="status"
@@ -147,8 +131,6 @@
                         <option value="done" @if($filters['status'] == 'done') selected @endif>Terminé</option>
                     </select>
                 </div>
-
-                <!-- Boutons Appliquer et Réinitialiser -->
                 <div class="flex gap-2">
                     <button type="submit"
                             class="flex-1 bg-[#8fc8b2] hover:bg-[#4e9893] text-[#19181b] px-4 py-2 rounded-lg font-medium transition text-sm">
@@ -221,7 +203,6 @@
                             onclick="if(!window.dragged){openTaskModal(this, '{{ auth()->user()->id_user }}', '{{ $currentRole }}');}"
                             style="cursor:pointer;"
                         >
-                            <!-- En-tête: titre + epic -->
                             <div class="flex items-center justify-between gap-3 mb-3">
                                 <span class="font-bold text-base text-[#ebeafd] break-words flex-1">{{ $task->title }}</span>
                                 @if($task->epic)
@@ -231,12 +212,10 @@
                                 @endif
                             </div>
 
-                            <!-- Date d'échéance -->
                             <span class="text-xs text-[#bac8df] mb-3">
                                 Échéance : {{ \Carbon\Carbon::parse($task->due_date)->format('d/m/Y') }}
                             </span>
 
-                            <!-- Alerte si nécessaire -->
                             @if($alerte)
                                 <div class="flex items-center justify-start mb-3">
                                     <span class="inline-flex items-center px-3 py-1 {{ $alerte_color }} text-xs font-semibold rounded-lg">
@@ -245,7 +224,6 @@
                                 </div>
                             @endif
 
-                            <!-- Avatar de la personne assignée -->
                             @if($assignedUser)
                                 <div class="flex items-center gap-2 mt-2 pt-2 border-t border-[#4b4155]">
                                     <div class="w-7 h-7 rounded-full bg-[#023e8a] text-white text-xs font-bold flex items-center justify-center">
@@ -358,23 +336,17 @@
     </form>
 </div>
 
-{{-- SCRIPT DRAG & DROP + MODAL + TOGGLE FILTRE --}}
+{{-- SCRIPT DRAG & DROP + MODAL + FILTRE --}}
 <script>
     let dragged = null;
     window.dragged = false;
-
-    // Toggle du panneau de filtrage
     function toggleFilterPanel() {
         const panel = document.getElementById('filterPanel');
         panel.classList.toggle('hidden');
     }
-
-    // Affiche le panel de filtre si des filtres sont actifs au chargement
     @if($hasActiveFilters)
         document.getElementById('filterPanel').classList.remove('hidden');
     @endif
-
-    // Drag & drop seulement si draggables (manager ou associé propriétaire)
     document.querySelectorAll('.kanban-task').forEach(task => {
         if (task.hasAttribute('draggable') && task.getAttribute('draggable') === "true") {
             task.addEventListener('dragstart', e => {
@@ -396,8 +368,6 @@
             e.preventDefault();
             if (!dragged) return;
             this.insertBefore(dragged, this.firstChild);
-
-            // Mise à jour des compteurs
             setTimeout(() => {
                 document.querySelectorAll('.kanban-column').forEach(col => {
                     const colStatus = col.getAttribute('data-status');

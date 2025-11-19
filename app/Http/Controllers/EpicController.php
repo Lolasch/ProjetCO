@@ -8,13 +8,11 @@ use Illuminate\Http\Request;
 
 class EpicController extends Controller
 {
-    // 📘 Formulaire création d’un epic
     public function create(Sprint $sprint)
     {
         return view('epics.create', compact('sprint'));
     }
 
-    // 📗 Sauvegarde d’un epic
     public function store(Request $request, Sprint $sprint)
     {
         $request->validate([
@@ -30,13 +28,11 @@ class EpicController extends Controller
                          ->with('success', 'Epic créé avec succès !');
     }
 
-    // ✏️ Formulaire d’édition
     public function edit(Epic $epic)
     {
         return view('epics.edit', compact('epic'));
     }
 
-    // 💾 Mise à jour d’un epic
     public function update(Request $request, Epic $epic)
     {
         $request->validate([
@@ -51,7 +47,6 @@ class EpicController extends Controller
                          ->with('success', 'Epic mis à jour avec succès !');
     }
 
-    // ❌ Suppression d’un epic
     public function destroy(Epic $epic)
     {
         $epic->delete();

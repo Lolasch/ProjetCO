@@ -8,8 +8,8 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $user = auth()->user();             // l'utilisateur connecté
-        $projects = $user->projects;        // ses projets via la relation belongsToMany
+        $user = auth()->user();      
+        $projects = $user->projects;        // relation belongsToMany avec projets
 
         return view('dashboard', compact('projects'));
     }

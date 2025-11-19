@@ -17,7 +17,7 @@ class ProjectController extends Controller
         $user = Auth::user();
         $projects = $user->projects;
 
-        // Calcule la progression :
+        // Calcule la progression de chaque projet
         foreach ($projects as $project) {
             $sprints = $project->sprints()->with(['epics.tasks', 'tasks'])->get();
             $tasks = collect();
@@ -175,6 +175,10 @@ class ProjectController extends Controller
     public function removeMember($projectId, $userId)
     {
         $project = Project::findOrFail($projectId);
+        $member = $project->members()->find($userId);
+        if ($member && $member->pivot->role === 'manager') {
+            return redirect()->back()->with('error', 'Suppression du manager impossible');
+        }
         $project->members()->detach($userId);
         return redirect()->back()->with('success', 'Membre supprimé du projet !');
     }

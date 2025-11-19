@@ -10,16 +10,15 @@ return new class extends Migration
     {
         Schema::create('tasks', function (Blueprint $table) {
             $table->id('id_task');
-            $table->unsignedBigInteger('sprint_id')->nullable(); // tâche liée à un sprint
-            $table->unsignedBigInteger('epic_id')->nullable();   // tâche liée à une epic
+            $table->unsignedBigInteger('sprint_id')->nullable();
+            $table->unsignedBigInteger('epic_id')->nullable();
             $table->string('title');
             $table->text('description')->nullable();
             $table->enum('status', ['todo', 'in_progress', 'done'])->default('todo');
-            $table->unsignedBigInteger('assigned_to')->nullable(); // utilisateur assigné
+            $table->unsignedBigInteger('assigned_to')->nullable();
             $table->date('due_date')->nullable();
             $table->timestamps();
 
-            // 🔗 Clés étrangères cohérentes avec tes autres tables
             $table->foreign('sprint_id')
                 ->references('id_sprint')
                 ->on('sprints')

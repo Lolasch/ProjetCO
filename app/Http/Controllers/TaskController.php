@@ -19,7 +19,7 @@ class TaskController extends Controller
             'due_date' => 'required|date',
         ]);
 
-        Task::create([
+        $task = Task::create([
             'title' => $request->title,
             'description' => $request->description,
             'status' => $request->status,
@@ -29,8 +29,12 @@ class TaskController extends Controller
             'due_date' => $request->due_date,
         ]);
 
-        return redirect()->route('projects.roadmap', $epic->sprint->project_id)
-                         ->with('success', 'Tâche créée avec succès !');
+        $sprintId = $request->input('sprint', $epic->sprint_id);
+
+        return redirect()->route('projects.kanban', [
+            'project' => $epic->sprint->project_id,
+            'sprint'  => $sprintId,
+        ])->with('success', 'Tâche créée avec succès !');
     }
 
     public function edit(Task $task)
@@ -55,6 +59,7 @@ class TaskController extends Controller
             'epic_id' => 'nullable|exists:epics,id_epic',
             'assigned_to' => 'nullable|exists:users,id_user',
             'due_date' => 'required|date',
+            'sprint' => 'nullable|integer'
         ]);
 
         $project = $task->epic
@@ -75,7 +80,6 @@ class TaskController extends Controller
             'due_date' => $data['due_date'],
         ]);
 
-        // Notification de mise à jour pour l'associé
         if ($task->assigned_to && $task->assigned_to != auth()->id()) {
             $notif = Notification::create([
                 'user_id' => $task->assigned_to,
@@ -98,9 +102,8 @@ class TaskController extends Controller
             }
         }
 
-        // Notification de retard si la tâche est en retard
+
         if ($task->assigned_to && $task->due_date < now()->toDateString() && $task->status != 'done') {
-            // Vérifier s'il y a déjà une notif de retard pour éviter les doublons
             $existingNotif = Notification::where('user_id', $task->assigned_to)
                 ->where('task_id', $task->id_task)
                 ->where('type', 'deadline')
@@ -132,15 +135,22 @@ class TaskController extends Controller
         }
 
         $projectId = $task->sprint->project_id ?? $task->epic->project_id ?? null;
-        return redirect()->route('projects.kanban', $projectId)
-            ->with('success', 'Tâche mise à jour avec succès !');
+        $sprintId = $request->input('sprint', $task->sprint_id ?? $task->epic->sprint_id ?? null);
+
+        return redirect()->route('projects.kanban', [
+            'project' => $projectId,
+            'sprint'  => $sprintId
+        ])->with('success', 'Tâche mise à jour avec succès !');
     }
 
-    public function destroy(Task $task)
+    public function destroy(Task $task, Request $request)
     {
         $projectId = $task->sprint->project_id ?? $task->epic->project_id ?? null;
+        $sprintId = $request->input('sprint', $task->sprint_id ?? $task->epic->sprint_id ?? null);
         $task->delete();
-        return redirect()->route('projects.kanban', $projectId)
-            ->with('success', 'Tâche supprimée avec succès !');
+        return redirect()->route('projects.kanban', [
+            'project' => $projectId,
+            'sprint'  => $sprintId
+        ])->with('success', 'Tâche supprimée avec succès !');
     }
 }

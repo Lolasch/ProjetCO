@@ -3,7 +3,6 @@
 @section('content')
 <div class="w-full px-4 py-6 flex flex-col items-center">
     <div class="w-full max-w-[1600px] mx-auto">
-        <!-- Ligne retour -->
         <div class="flex items-center gap-6 mb-6">
             <a href="{{ route('dashboard') }}"
                class="inline-flex items-center bg-[#5b6cb2] text-white font-bold px-4 py-2 rounded-full text-sm shadow-md hover:bg-[#39356d] transition">
@@ -27,25 +26,33 @@
             </div>
         @endif
 
-        <!-- Calendrier format optimisé -->
-        <div id="calendar" class="calendar-container">
-        </div>
+        <div id="calendar" class="calendar-container"></div>
     </div>
 </div>
 
-<!-- Modale Epic -->
-<div id="epicModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+<!-- EPIC MODAL -->
+<div id="epicModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50">
     <div class="bg-[#19181f] rounded-2xl shadow-2xl w-96 max-w-full p-5 border border-[#3a324a]">
         <div class="flex justify-between items-center mb-4">
             <h3 id="epicTitle" class="text-lg font-bold text-white"></h3>
             <button onclick="closeEpicModal()" class="text-[#b1b9ea] hover:text-white text-2xl leading-none">&times;</button>
         </div>
         <div id="epicTasks" class="mb-2 max-h-72 overflow-y-auto pr-1 space-y-2"></div>
+        @if($currentRole === 'manager')
+        <div class="flex gap-2 mt-4 justify-end">
+            <a id="editEpicBtn" href="#" class="bg-[#A4F2E3] text-[#232332] px-3 py-1 rounded-lg font-semibold hover:bg-[#71E0CA] transition">Modifier</a>
+            <form id="deleteEpicForm" method="POST" style="display:inline;">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="bg-[#DE2E4B] px-3 py-1 rounded-lg text-white text-sm font-semibold hover:bg-[#d64545] transition">Supprimer</button>
+            </form>
+        </div>
+        @endif
     </div>
 </div>
 
-<!-- Modale Release -->
-<div id="releaseModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+<!-- RELEASE MODAL -->
+<div id="releaseModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50">
     <div class="bg-[#19181f] rounded-2xl shadow-2xl w-96 max-w-full p-5 border border-[#3a324a]">
         <div class="flex justify-between items-center mb-4">
             <h3 id="releaseTitle" class="text-lg font-bold text-white"></h3>
@@ -56,10 +63,7 @@
         <form id="deleteReleaseForm" method="POST">
             @csrf
             @method('DELETE')
-            <button type="submit"
-                    class="bg-[#DE2E4B] px-3 py-1.5 rounded-lg text-white text-sm font-semibold hover:bg-[#d64545] transition">
-                Supprimer
-            </button>
+            <button type="submit" class="bg-[#DE2E4B] px-3 py-1.5 rounded-lg text-white text-sm font-semibold hover:bg-[#d64545] transition">Supprimer</button>
         </form>
         @endif
     </div>
@@ -95,31 +99,29 @@ function openEpicModal(epic) {
         `;
         epicTasksDiv.appendChild(taskEl);
     });
+    @if($currentRole === 'manager')
+    document.getElementById('editEpicBtn').href = `/epics/${epic.id}/edit`;
+    document.getElementById('deleteEpicForm').action = `/epics/${epic.id}`;
+    @endif
     document.getElementById('epicModal').classList.remove('hidden');
-    document.getElementById('epicModal').classList.add('flex');
 }
-
 function closeEpicModal() {
     document.getElementById('epicModal').classList.add('hidden');
-    document.getElementById('epicModal').classList.remove('flex');
 }
 
-function openReleaseModal(release) {
-    document.getElementById('releaseTitle').innerText = release.title;
+function openReleaseModal(data) {
+    document.getElementById('releaseTitle').innerText = data.title;
     document.getElementById('releaseInfo').innerHTML = `
-        <p class="mb-1">Date de release : <span class="font-semibold">${release.release_date}</span></p>
+        <p class="mb-1">Date de release : <span class="font-semibold">${data.release_date}</span></p>
         <p class="mb-1">Projet : <span class="font-semibold">{{ $project->name }}</span></p>
     `;
     @if($currentRole === 'manager')
-    document.getElementById('deleteReleaseForm').action = `/releases/${release.id}`;
+    document.getElementById('deleteReleaseForm').action = `/releases/${data.id}`;
     @endif
     document.getElementById('releaseModal').classList.remove('hidden');
-    document.getElementById('releaseModal').classList.add('flex');
 }
-
 function closeReleaseModal() {
     document.getElementById('releaseModal').classList.add('hidden');
-    document.getElementById('releaseModal').classList.remove('flex');
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -141,23 +143,23 @@ document.addEventListener('DOMContentLoaded', function() {
         events: [
             @foreach($sprints as $sprint)
             {
-                id: 'sprint-{{ $sprint->id_sprint }}',
-                title: '{{ $sprint->name }}',
-                start: '{{ $sprint->start_date }}',
-                end: '{{ $sprint->end_date }}',
-                color: '{{ $sprint->color ?? "#5b6cb2" }}',
+                id: @json("sprint-{$sprint->id_sprint}"),
+                title: @json($sprint->name),
+                start: @json($sprint->start_date),
+                end: @json($sprint->end_date),
+                color: @json($sprint->color ?? '#5b6cb2'),
                 extendedProps: {
                     epics: [
                         @foreach($sprint->epics as $epic)
                         {
-                            id: '{{ $epic->id_epic }}',
-                            title: '{{ $epic->name }}',
+                            id: @json($epic->id_epic),
+                            title: @json($epic->name),
                             tasks: [
                                 @foreach($epic->tasks as $task)
                                 {
-                                    id: '{{ $task->id_task }}',
-                                    title: '{{ $task->title }}',
-                                    status: '{{ $task->status }}'
+                                    id: @json($task->id_task),
+                                    title: @json($task->title),
+                                    status: @json($task->status)
                                 },
                                 @endforeach
                             ]
@@ -169,10 +171,10 @@ document.addEventListener('DOMContentLoaded', function() {
             @endforeach
             @foreach($releases as $release)
             {
-                id: 'release-{{ $release->id }}',
-                title: '{{ $release->name }}',
-                start: '{{ $release->release_date }}',
-                color: '{{ $release->color ?? "#f97316" }}',
+                id: @json("release-{$release->id}"),
+                title: @json($release->name),
+                start: @json($release->release_date),
+                color: @json($release->color ?? '#f97316'),
                 extendedProps: { isRelease: true }
             },
             @endforeach
@@ -180,70 +182,57 @@ document.addEventListener('DOMContentLoaded', function() {
         eventContent: function(arg) {
             let el = document.createElement('div');
             el.classList.add('p-3', 'rounded-lg', 'shadow-sm');
-
             const transparentColor = hexToRgba(arg.event.backgroundColor, 0.5);
             el.style.backgroundColor = transparentColor;
             el.style.border = `1px solid ${hexToRgba(arg.event.backgroundColor, 0.8)}`;
-
-            if(!arg.event.extendedProps.isRelease){
-                // Header: titre à gauche + boutons Modifier/Supprimer à droite
-                let topRow = document.createElement('div');
-                topRow.classList.add('flex', 'justify-between', 'items-center', 'mb-2');
-                topRow.innerHTML = `
-                    <strong class="text-sm text-white">${arg.event.title}</strong>
-                    @if($currentRole === 'manager')
-                    <div class="flex gap-1">
-                        <a href="/sprints/${arg.event.id.split('-')[1]}/edit"
-                           class="text-[10px] bg-[#d4b068] px-2 py-0.5 rounded-md text-white hover:bg-[#c19a4e] font-semibold transition">Modifier</a>
-                        <form action="/sprints/${arg.event.id.split('-')[1]}" method="POST" style="display:inline;">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit"
-                                    class="text-[10px] bg-[#e88d8b] px-2 py-0.5 rounded-md text-white hover:bg-[#d67673] font-semibold transition">Supprimer</button>
-                        </form>
-                    </div>
-                    @endif
-                `;
-                el.appendChild(topRow);
-
-                @if($currentRole === 'manager')
-                // Bouton "Créer un Epic" sous le titre
-                let createEpicRow = document.createElement('div');
-                createEpicRow.classList.add('mb-2');
-                createEpicRow.innerHTML = `
-                    <a href="/sprints/${arg.event.id.split('-')[1]}/epics/create"
-                       class="inline-block text-[10px] bg-[#8fc8b2] px-2 py-1 rounded-md text-white hover:bg-[#4e9893] font-semibold transition">Créer un Epic</a>
-                `;
-                el.appendChild(createEpicRow);
-                @endif
-
-                // Epics grid
-                if(arg.event.extendedProps.epics.length > 0) {
-                    let epicsContainer = document.createElement('div');
-                    epicsContainer.classList.add('grid', 'grid-cols-6', 'gap-1.5');
-                    arg.event.extendedProps.epics.forEach(epic => {
-                        let epicEl = document.createElement('div');
-                        epicEl.classList.add('px-2', 'py-2', 'bg-[#1a1a24]', 'text-white', 'rounded', 'text-[9px]', 'cursor-pointer', 'hover:bg-[#252530]', 'transition', 'text-center', 'truncate', 'font-medium');
-                        epicEl.innerText = epic.title;
-                        epicEl.title = epic.title;
-                        epicEl.onclick = () => openEpicModal(epic);
-                        epicsContainer.appendChild(epicEl);
-                    });
-                    el.appendChild(epicsContainer);
-                }
-            } else {
-                // Release: affiche le nom en blanc
-                let releaseTitle = document.createElement('div');
-                releaseTitle.innerHTML = `<strong class="text-sm text-white">${arg.event.title}</strong>`;
-                releaseTitle.classList.add('text-white', 'mb-1');
-                el.appendChild(releaseTitle);
-
+            if(arg.event.extendedProps.isRelease){
                 el.style.cursor = 'pointer';
+                el.innerHTML = `<strong class="text-sm text-white">${arg.event.title}</strong>`;
                 el.onclick = () => openReleaseModal({
                     id: arg.event.id.split('-')[1],
                     title: arg.event.title,
                     release_date: arg.event.start
                 });
+                return { domNodes: [el] };
+            }
+            let topRow = document.createElement('div');
+            topRow.classList.add('flex', 'justify-between', 'items-center', 'mb-2');
+            topRow.innerHTML = `
+                <strong class="text-sm text-white">${arg.event.title}</strong>
+                @if($currentRole === 'manager')
+                <div class="flex gap-1">
+                    <a href="/sprints/${arg.event.id.split('-')[1]}/edit"
+                       class="text-[10px] bg-[#d4b068] px-2 py-0.5 rounded-md text-white hover:bg-[#c19a4e] font-semibold transition">Modifier</a>
+                    <form action="/sprints/${arg.event.id.split('-')[1]}" method="POST" style="display:inline;">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="text-[10px] bg-[#e88d8b] px-2 py-0.5 rounded-md text-white hover:bg-[#d67673] font-semibold transition">Supprimer</button>
+                    </form>
+                </div>
+                @endif
+            `;
+            el.appendChild(topRow);
+            @if($currentRole === 'manager')
+            let createEpicRow = document.createElement('div');
+            createEpicRow.classList.add('mb-2');
+            createEpicRow.innerHTML = `
+                <a href="/sprints/${arg.event.id.split('-')[1]}/epics/create"
+                   class="inline-block text-[10px] bg-[#8fc8b2] px-2 py-1 rounded-md text-white hover:bg-[#4e9893] font-semibold transition">Créer un Epic</a>
+            `;
+            el.appendChild(createEpicRow);
+            @endif
+            if(arg.event.extendedProps.epics && arg.event.extendedProps.epics.length > 0) {
+                let epicsContainer = document.createElement('div');
+                epicsContainer.classList.add('grid', 'grid-cols-6', 'gap-1.5');
+                arg.event.extendedProps.epics.forEach(epic => {
+                    let epicEl = document.createElement('div');
+                    epicEl.classList.add('px-2', 'py-2', 'bg-[#1a1a24]', 'text-white', 'rounded', 'text-[9px]', 'cursor-pointer', 'hover:bg-[#252530]', 'transition', 'text-center', 'truncate', 'font-medium');
+                    epicEl.innerText = epic.title;
+                    epicEl.title = epic.title;
+                    epicEl.onclick = () => openEpicModal(epic);
+                    epicsContainer.appendChild(epicEl);
+                });
+                el.appendChild(epicsContainer);
             }
             return { domNodes: [el] };
         }

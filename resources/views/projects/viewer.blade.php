@@ -5,8 +5,6 @@
     <h1 class="text-3xl font-bold mb-8 text-center text-[#d4d6f5]">
         Vue externe du projet {{ $project->name }}
     </h1>
-
-    <!-- Statistiques & Membres -->
     <div class="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div class="bg-[#222235] rounded-2xl p-6 border border-[#373755]">
             <div class="font-bold mb-2 text-[#8ee6d7] text-xl">Statistiques des tâches :</div>
@@ -33,7 +31,6 @@
         </div>
     </div>
 
-    <!-- Graphiques -->
     <div class="mb-12 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div class="bg-[#21213c] rounded-2xl py-6 flex flex-col items-center border border-[#373755]">
             <h2 class="font-bold mb-4 text-[#C1B9F7] text-lg">Diagramme des statuts de tâches</h2>

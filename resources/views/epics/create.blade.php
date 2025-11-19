@@ -3,7 +3,8 @@
 @section('content')
 <div class="max-w-md mx-auto bg-[#232332] border border-[#373755] rounded-xl shadow-md p-7 mt-6">
     <h1 class="text-2xl font-bold text-center mb-6 text-[#BBBCE1]">
-        Créer un Epic pour le sprint&nbsp;: <span class="text-[#8EE6D7]">{{ $sprint->name }}</span>
+        Créer un Epic pour le sprint&nbsp;:
+        <span class="text-[#8EE6D7]">{!! html_entity_decode($sprint->name) !!}</span>
     </h1>
 
     <form action="{{ route('epics.store', $sprint->id_sprint) }}" method="POST">

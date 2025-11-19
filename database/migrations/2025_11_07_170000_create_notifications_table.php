@@ -10,8 +10,8 @@ return new class extends Migration
     {
         Schema::create('notifications', function (Blueprint $table) {
             $table->id('id_notification');
-            $table->unsignedBigInteger('user_id'); // destinataire
-            $table->string('type'); // ex: 'deadline', 'update', 'mail'
+            $table->unsignedBigInteger('user_id');
+            $table->string('type');
             $table->unsignedBigInteger('task_id')->nullable();
             $table->unsignedBigInteger('project_id')->nullable();
             $table->string('title');

@@ -9,8 +9,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('epics', function (Blueprint $table) {
-            $table->id('id_epic'); // ✅ cohérent avec les autres tables
-            $table->unsignedBigInteger('project_id'); // Epic liée à un projet
+            $table->id('id_epic');
+            $table->unsignedBigInteger('project_id');
             $table->string('name');
             $table->text('description')->nullable();
             $table->timestamps();

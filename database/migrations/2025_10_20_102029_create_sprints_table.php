@@ -13,7 +13,7 @@ public function up()
 {
     Schema::create('sprints', function (Blueprint $table) {
         $table->id('id_sprint');
-        $table->unsignedBigInteger('project_id'); // clé étrangère vers le projet
+        $table->unsignedBigInteger('project_id'); 
         $table->string('name');
         $table->date('start_date');
         $table->date('end_date');

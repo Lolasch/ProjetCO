@@ -8,13 +8,11 @@ use Illuminate\Http\Request;
 
 class ReleaseController extends Controller
 {
-    // Affiche le formulaire de création d'une release
     public function create(Project $project)
     {
         return view('releases.create', compact('project'));
     }
 
-    // Stocke la release dans la BDD
     public function store(Request $request, Project $project)
     {
         $request->validate([
@@ -34,7 +32,6 @@ class ReleaseController extends Controller
                          ->with('success', 'Release créée avec succès !');
     }
 
-    // Supprimer une release
     public function destroy($id)
     {
         $release = Release::findOrFail($id);
