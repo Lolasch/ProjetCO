@@ -1,61 +1,135 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# ProjetCO - Application de gestion
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Description
+Ce projet a été réalisé en novembre dernier, durant ma troisième année de BUT MMI, en travail individuel. J’ai pris en charge toutes les étapes, de l’analyse du besoin jusqu’au développement final, et j’ai travaillé sur ce projet également les week-ends par passion.
 
-## About Laravel
+L’objectif était de développer une application web inspirée de Trello, permettant de gérer des projets collaboratifs en utilisant la méthode Agile et le Kanban. 
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+L’application inclut :
+- Roadmap
+- Tableau Kanban
+- Gestion des rôles utilisateurs ( le manager peut gérer entièrement son projet, modifier les rôles des utilisateurs, et avoir une vue d’ensemble sur le projet, tandis que les associés peuvent uniquement modifier et déplacer leurs propres tâches dans le Kanban. Les managers peuvent créer un projet et être associés dans un autre projet avec le même compte )
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Fonctionnalités avancées : 
+- Système de notifications personnelles avertissant trois jours avant la fin d’une tâche ou en cas de retard
+- Filtres dans le Kanban pour mieux visualiser les tâches et possibilité de déplacer les tâches par drag and drop
+- Pour le roadmap : les sprints, les epics et les user stories sont intégrés, avec même la possibilité d’ajouter une release sur un jour précis.
 
-## Learning Laravel
+ps : Un utilisateur peut être manager sur un projet et associé sur un autre avec le même compte.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+---
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## Fonctionnalités principales
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- Création et gestion de projets
+- Tableau Kanban avec drag and drop
+- Filtres pour organiser les tâches
+- Système de notifications :
+  - Alerte 3 jours avant la fin d’une tâche
+  - Notification en cas de retard
+- Roadmap avec sprints, epics, user stories et releases
+- Gestion des rôles utilisateurs
+- Authentification complète (inscription et connexion)
+  
+---
 
-## Laravel Sponsors
+## Mon rôle
+J’ai réalisé l’intégralité du projet en autonomie :
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+- Analyse des besoins
+- Rédaction du cahier des charges
+- Définition des personas
+- Création des user flows
+- Conception des wireframes et maquettes
+- Organisation du backlog (epics et user stories)
+- Suivi du projet avec une méthodologie Agile
 
-### Premium Partners
+### Développement
+- Conception de la base de données
+- Développement front-end et back-end
+- Implémentation des fonctionnalités dynamiques (drag and drop, filtres, notifications)
+- Mise en place du système d’authentification
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### UX / UI
+- Conception de l’identité visuelle
+- Interface ergonomique et intuitive
 
-## Contributing
+### Qualité
+- Prise en compte de l’accessibilité
+- Bonnes pratiques de sécurité
+- Rédaction d’une documentation technique en anglais
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+## Technologies utilisées
+![PHP](https://img.shields.io/badge/PHP-%233B4CCA?style=for-the-badge&logo=php&logoColor=white)
+![Laravel](https://img.shields.io/badge/Laravel-%232C5282?style=for-the-badge&logo=laravel&logoColor=white)
+![Blade](https://img.shields.io/badge/Blade-%234A69BD?style=for-the-badge&logo=laravel&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-%23007396?style=for-the-badge&logo=mysql&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-%231E3A8A?style=for-the-badge&logo=javascript&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-%233B82F6?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Figma](https://img.shields.io/badge/Figma-%232563EB?style=for-the-badge&logo=figma&logoColor=white)
+![Trello](https://img.shields.io/badge/Trello-%231D4ED8?style=for-the-badge&logo=trello&logoColor=white)
+![GitLab](https://img.shields.io/badge/GitLab-%231E40AF?style=for-the-badge&logo=gitlab&logoColor=white)
+![GitHub](https://img.shields.io/badge/GitHub-%230B3D91?style=for-the-badge&logo=github&logoColor=white)
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+---
 
-## Security Vulnerabilities
+## Aperçu du projet
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Page d’accueil
+<img src="./images_presentation/page_accueil.png" width="650"/>
 
-## License
+---
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Dashboard
+<img src="./images_presentation/dashboard.png" width="650"/>
+
+---
+
+### Vue d’ensemble
+<img src="./images_presentation/Vue_d_ensemble.png" width="650"/>
+
+Le lien d’accès côté client est actuellement configuré en local (localhost).  
+Il devra être modifié lors du déploiement afin de pointer vers l’URL de production.
+
+---
+
+### Vue client externe
+<img src="./images_presentation/vue_client_externe.png" width="650"/>
+
+---
+
+### Tableau Kanban
+<img src="./images_presentation/Kanban.png" width="650"/>
+
+---
+
+### Roadmap
+<img src="./images_presentation/Roadmap.png" width="650"/>
+
+---
+
+## Résultat
+Le projet a été évalué dans le cadre de ma formation et validé lors d’une soutenance.
+
+Il s’agit d’une application complète, fonctionnelle et ergonomique, développée en autonomie tout en respectant les principes de la méthodologie Agile.
+
+---
+
+## Retour d’expérience
+Ce projet m’a permis de :
+- Gérer un projet web complet en autonomie
+- Appliquer concrètement la méthodologie Agile
+- Concevoir une application avec gestion avancée des rôles utilisateurs
+- Développer des fonctionnalités interactives
+
+Il m’a également appris à m’organiser efficacement sur un projet long et à maintenir un bon niveau de rigueur en travaillant seul.
+
+---
+
+## Améliorations possibles
+- Amélioration du système de notifications
+- Optimisation du Kanban
+- Ajout de fonctionnalités collaboratives
