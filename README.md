@@ -92,7 +92,7 @@ J’ai réalisé l’intégralité du projet en autonomie :
 <img src="./images_presentation/Vue_d_ensemble.png" width="650"/>
 
 Le lien d’accès côté client est actuellement configuré en local (localhost).  
-Il devra être modifié lors du déploiement afin de pointer vers l’URL de production.
+Il devra être modifié lors du déploiement.
 
 ---
 
